@@ -21,6 +21,7 @@ pub fn run() {
             command::greet,
             tools::encoding::base64_encode,
             tools::encoding::base64_decode,
+            tools::llm_toolset::generate_motion_descriptor,
         ])
         .events(collect_events![]);
 

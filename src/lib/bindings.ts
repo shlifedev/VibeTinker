@@ -18,6 +18,14 @@ async base64Decode(input: string) : Promise<Result<string, Base64Error>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async generateMotionDescriptor(motionData: string, sampleCount: number) : Promise<Result<MotionDescriptorResult, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("generate_motion_descriptor", { motionData, sampleCount }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -32,6 +40,7 @@ async base64Decode(input: string) : Promise<Result<string, Base64Error>> {
 /** user-defined types **/
 
 export type Base64Error = { DecodeError: string } | "Utf8Error"
+export type MotionDescriptorResult = { en: string; ko: string }
 
 /** tauri-specta globals **/
 

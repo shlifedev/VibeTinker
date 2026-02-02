@@ -17,6 +17,13 @@ export const toolCategories: ToolCategory[] = [
     tools: [
       { id: "base64", name: "Base64", path: "/tools/encoding/base64" }
     ]
+  },
+  {
+    id: "llm-toolset",
+    name: "LLM 도구",
+    tools: [
+      { id: "motion-descriptor", name: "Motion Descriptor", path: "/tools/llm-toolset/motion-descriptor" }
+    ]
   }
 ]
 
