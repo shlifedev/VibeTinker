@@ -50,6 +50,46 @@
     "idle", "walk", "run", "jump", "attack"
   ]
 
+  const CUSTOM_TAGS_KEY = "sprite-sheet-describer-custom-tags"
+
+  function loadCustomTags() {
+    const stored = localStorage.getItem(CUSTOM_TAGS_KEY)
+    if (stored) {
+      try {
+        customTags = JSON.parse(stored)
+      } catch {
+        customTags = []
+      }
+    }
+  }
+
+  function saveCustomTags() {
+    localStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(customTags))
+  }
+
+  // Load on mount
+  $effect(() => {
+    loadCustomTags()
+  })
+
+  let showAddTagModal = $state(false)
+  let newTagName = $state("")
+
+  function addCustomTag() {
+    const tag = newTagName.trim()
+    if (tag && !customTags.includes(tag) && !PRESET_TAGS.includes(tag)) {
+      customTags = [...customTags, tag]
+      saveCustomTags()
+      newTagName = ""
+      showAddTagModal = false
+    }
+  }
+
+  function removeCustomTag(tag: string) {
+    customTags = customTags.filter(t => t !== tag)
+    saveCustomTags()
+  }
+
   function applyTag(tag: string) {
     if (selectionMode === "single" && currentCell) {
       const key = cellKey(currentCell.row, currentCell.col)
@@ -373,7 +413,13 @@
     </div>
 
     <div class="tags-toolbar">
-      <h3>프리셋 태그</h3>
+      <div class="toolbar-header">
+        <h3>프리셋 태그</h3>
+        <button class="add-tag-btn" onclick={() => showAddTagModal = true}>
+          + 커스텀 태그 추가
+        </button>
+      </div>
+
       <div class="tags-toolbar-content">
         {#each PRESET_TAGS as tag}
           <button
@@ -385,6 +431,25 @@
           </button>
         {/each}
       </div>
+
+      {#if customTags.length > 0}
+        <div class="custom-tags-section">
+          <h4>커스텀 태그</h4>
+          <div class="tags-toolbar-content">
+            {#each customTags as tag}
+              <button
+                class="tag-btn custom-tag"
+                onclick={() => applyTag(tag)}
+                disabled={selectionMode === "single" || selectedCells.size === 0}
+              >
+                {tag}
+                <span class="remove-tag" onclick={(e) => { e.stopPropagation(); removeCustomTag(tag) }}>×</span>
+              </button>
+            {/each}
+          </div>
+        </div>
+      {/if}
+
       {#if selectionMode === "multi" && selectedCells.size === 0}
         <p class="toolbar-hint">멀티 선택 모드에서 셀을 선택한 후 태그를 클릭하세요</p>
       {/if}
@@ -427,6 +492,14 @@
                   {tag}
                 </button>
               {/each}
+              {#each customTags as tag}
+                <button
+                  class="tag-btn custom-tag"
+                  onclick={() => { modalDescription = tag }}
+                >
+                  {tag}
+                </button>
+              {/each}
             </div>
           </div>
         </div>
@@ -435,6 +508,31 @@
           <button class="btn-secondary" onclick={closeModal}>취소</button>
           <button class="btn-danger" onclick={deleteDescription}>삭제</button>
           <button class="btn-primary" onclick={saveDescription}>저장</button>
+        </div>
+      </div>
+    </div>
+  {/if}
+
+  {#if showAddTagModal}
+    <div class="modal-backdrop" onclick={() => showAddTagModal = false}>
+      <div class="modal small-modal" onclick={(e) => e.stopPropagation()}>
+        <div class="modal-header">
+          <h3>커스텀 태그 추가</h3>
+          <button class="close-btn" onclick={() => showAddTagModal = false}>×</button>
+        </div>
+
+        <div class="modal-body">
+          <input
+            type="text"
+            bind:value={newTagName}
+            placeholder="태그 이름을 입력하세요..."
+            onkeydown={(e) => e.key === "Enter" && addCustomTag()}
+          />
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick={() => showAddTagModal = false}>취소</button>
+          <button class="btn-primary" onclick={addCustomTag}>추가</button>
         </div>
       </div>
     </div>
@@ -824,5 +922,79 @@
     margin: 1rem 0 0 0;
     font-size: 0.85rem;
     color: #666;
+  }
+
+  .toolbar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .add-tag-btn {
+    padding: 0.4rem 0.8rem;
+    background: #4CAF50;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+
+  .add-tag-btn:hover {
+    background: #66BB6A;
+  }
+
+  .custom-tags-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #333;
+  }
+
+  .custom-tags-section h4 {
+    margin: 0 0 1rem 0;
+    font-size: 0.9rem;
+    color: #4CAF50;
+  }
+
+  .custom-tag {
+    background: #4CAF50;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .custom-tag:hover:not(:disabled) {
+    background: #66BB6A;
+  }
+
+  .remove-tag {
+    font-size: 1.2rem;
+    line-height: 1;
+    opacity: 0.7;
+  }
+
+  .remove-tag:hover {
+    opacity: 1;
+  }
+
+  .small-modal {
+    max-width: 400px;
+  }
+
+  .modal-body input[type="text"] {
+    width: 100%;
+    padding: 0.75rem;
+    background: #0d0d0d;
+    border: 1px solid #444;
+    color: #e0e0e0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+
+  .modal-body input[type="text"]:focus {
+    outline: none;
+    border-color: #4CAF50;
   }
 </style>
