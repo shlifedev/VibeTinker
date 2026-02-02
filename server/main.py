@@ -23,6 +23,11 @@ app.add_middleware(
 )
 
 
+from routers import base64_tool
+
+app.include_router(base64_tool.router)
+
+
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
