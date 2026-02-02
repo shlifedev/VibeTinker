@@ -12,7 +12,13 @@
       if (mode === "encode") {
         output = await commands.base64Encode(input)
       } else {
-        output = await commands.base64Decode(input)
+        const result = await commands.base64Decode(input)
+        if (result.status === "ok") {
+          output = result.data
+        } else {
+          error = JSON.stringify(result.error)
+          output = ""
+        }
       }
     } catch (e) {
       error = String(e)
