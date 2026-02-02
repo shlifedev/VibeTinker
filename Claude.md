@@ -33,7 +33,13 @@ bun run tauri build        # Build release
 
 ```
 /src                          # Frontend (SvelteKit)
-├── routes/                   # File-based routing
+├── routes/
+│   ├── tools/
+│   │   ├── encoding/
+│   │   │   └── base64/         # Base64 encoder/decoder
+│   │   └── llm-toolset/
+│   │       ├── motion-descriptor/      # Mouse motion to LLM prompt
+│   │       └── sprite-sheet-describer/ # Sprite sheet grid annotator
 │   ├── +page.svelte         # Pages (+ prefix = SvelteKit special file)
 │   └── +layout.svelte       # Layouts
 ├── lib/
@@ -160,6 +166,32 @@ bun run check
 ### Adding State Fields
 1. Add to `AppState` struct in `lib.rs`
 2. Update initialization in `.manage()` call
+
+## Tools
+
+### Sprite Sheet Describer
+
+스프라이트 시트를 n×n 그리드로 나누고 각 셀에 설명을 추가하는 도구입니다.
+
+**Features:**
+- 이미지 파일 로드 (drag & drop or file picker)
+- 사용자 지정 그리드 크기 (1×1 ~ 50×50)
+- 단일/멀티 셀 선택 모드
+- 프리셋 태그 (지형, 구조물, 캐릭터 등)
+- 커스텀 태그 (localStorage 저장)
+- 출력 형식: JSON, 텍스트 리스트
+- 인덱스 형식: Row/Col 또는 Index
+- 프로젝트 저장/불러오기
+
+**Usage:**
+1. 이미지 불러오기
+2. 그리드 크기 설정
+3. 셀 클릭하여 설명 입력 또는 태그 사용
+4. 출력 복사
+
+**Selection Modes:**
+- Single mode: Click cell → modal opens for description
+- Multi mode: Click (single), Ctrl+click (toggle), Shift+click (rectangle)
 
 ## Keeping This File Updated
 
