@@ -394,18 +394,35 @@
     // Highlight cells with descriptions
     cellDescriptions.forEach((desc, key) => {
       const { row, col } = parseKey(key)
-      ctx.fillStyle = "rgba(14, 99, 156, 0.3)"
-      ctx.fillRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight)
 
-      // Draw description text on cell
-      ctx.fillStyle = "#fff"
-      ctx.font = `${Math.min(14, cellHeight * 0.3)}px sans-serif`
+      // Green border instead of blue overlay
+      ctx.strokeStyle = "#4CAF50"
+      ctx.lineWidth = 2
+      ctx.strokeRect(col * cellWidth + 1, row * cellHeight + 1, cellWidth - 2, cellHeight - 2)
+
+      // Text with dark background pill
+      const fontSize = Math.min(12, cellHeight * 0.25)
+      ctx.font = `${fontSize}px sans-serif`
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
 
-      const maxChars = Math.max(2, Math.floor(cellWidth / 8))
+      const maxChars = Math.max(2, Math.floor(cellWidth / 7))
       const displayText = desc.length > maxChars ? desc.slice(0, maxChars - 1) + "…" : desc
-      ctx.fillText(displayText, col * cellWidth + cellWidth / 2, row * cellHeight + cellHeight / 2)
+      const textWidth = ctx.measureText(displayText).width
+      const cx = col * cellWidth + cellWidth / 2
+      const cy = row * cellHeight + cellHeight / 2
+
+      // Dark background behind text
+      const padX = 4
+      const padY = 2
+      ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
+      ctx.beginPath()
+      ctx.roundRect(cx - textWidth / 2 - padX, cy - fontSize / 2 - padY, textWidth + padX * 2, fontSize + padY * 2, 3)
+      ctx.fill()
+
+      // White text
+      ctx.fillStyle = "#fff"
+      ctx.fillText(displayText, cx, cy)
       ctx.textAlign = "start"
       ctx.textBaseline = "alphabetic"
     })
