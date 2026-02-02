@@ -20,17 +20,28 @@
   let animationFrameId = $state(0)
   let playbackStartTime = $state(0)
 
+  function getCanvasCoords(e: MouseEvent): { x: number, y: number } {
+    if (!canvas) return { x: 0, y: 0 }
+    const rect = canvas.getBoundingClientRect()
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    return {
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
+    }
+  }
+
   function startRecording(e: MouseEvent) {
     if (!canvas) return
-    
+
     isRecording = true
     motionData = []
     startTime = Date.now()
-    
-    const rect = canvas.getBoundingClientRect()
+
+    const { x, y } = getCanvasCoords(e)
     motionData.push({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x,
+      y,
       timestamp: 0
     })
     
@@ -39,11 +50,11 @@
 
   function recordMotion(e: MouseEvent) {
     if (!isRecording || !canvas) return
-    
-    const rect = canvas.getBoundingClientRect()
+
+    const { x, y } = getCanvasCoords(e)
     motionData.push({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+      x,
+      y,
       timestamp: Date.now() - startTime
     })
     
@@ -373,108 +384,104 @@
     <p>마우스 움직임을 기록하고 LLM 프롬프트로 변환합니다.</p>
   </header>
 
-  <div class="instructions">
-    <h3>사용 방법</h3>
-    <ol>
-      <li>캔버스에서 <strong>마우스를 클릭</strong>하여 기록 시작</li>
-      <li>클릭한 상태로 <strong>마우스를 움직여</strong> 모션 기록</li>
-      <li><strong>마우스를 떼면</strong> 자동으로 기록 종료 및 분석</li>
-    </ol>
-  </div>
+  <div class="main-grid">
+    <div class="left-column">
+      <div class="canvas-container">
+        <canvas
+          bind:this={canvas}
+          width="800"
+          height="400"
+          class:recording={isRecording}
+          onmousedown={startRecording}
+          onmousemove={recordMotion}
+          onmouseup={stopRecording}
+          onmouseleave={stopRecording}
+        >
+        </canvas>
 
-  <div class="controls-row">
-    <div class="control-group">
-      <label>샘플 수: {sampleCount}</label>
-      <input type="range" min="5" max="150" step="1" bind:value={sampleCount} />
-    </div>
+        <div class="legend">
+          <div class="legend-bar"></div>
+          <div class="legend-labels">
+            <span>느림</span>
+            <span>중간</span>
+            <span>빠름</span>
+          </div>
+        </div>
 
-  </div>
+        <div class="canvas-info">
+          {#if isRecording}
+            <span class="status recording">🔴 기록 중... ({motionData.length} 포인트)</span>
+          {:else if motionData.length > 0}
+            <span class="status">✅ 기록 완료 ({motionData.length} 포인트)</span>
+          {:else}
+            <span class="status">클릭하여 기록 시작</span>
+          {/if}
 
-  <div class="canvas-container">
-    <canvas
-      bind:this={canvas}
-      width="800"
-      height="400"
-      class:recording={isRecording}
-      onmousedown={startRecording}
-      onmousemove={recordMotion}
-      onmouseup={stopRecording}
-      onmouseleave={stopRecording}
-    >
-    </canvas>
-    
-    <div class="legend">
-      <div class="legend-bar"></div>
-      <div class="legend-labels">
-        <span>느림</span>
-        <span>중간</span>
-        <span>빠름</span>
-      </div>
-    </div>
-
-    <div class="canvas-info">
-      {#if isRecording}
-        <span class="status recording">🔴 기록 중... ({motionData.length} 포인트)</span>
-      {:else if motionData.length > 0}
-        <span class="status">✅ 기록 완료 ({motionData.length} 포인트)</span>
-      {:else}
-        <span class="status">클릭하여 기록 시작</span>
-      {/if}
-
-      <div class="canvas-actions">
-        <button onclick={copyImage} disabled={isRecording || motionData.length < 2}>
-          Copy Image
-        </button>
-        <button onclick={clearCanvas} disabled={isRecording}>
-          Clear
-        </button>
-      </div>
-    </div>
-
-    {#if !isRecording && motionData.length > 1}
-      <div class="simulation-controls">
-        <button onclick={startPlayback}>
-          {isPlaying ? "⏹ Stop" : "▶ Play"}
-        </button>
-        <button onclick={() => drawCanvas()}>
-          원본 보기
-        </button>
-        <div class="speed-controls">
-          <span>속도:</span>
-          {#each [0.5, 1, 2] as speed}
-            <button class:active={playbackSpeed === speed} onclick={() => { playbackSpeed = speed }}>
-              {speed}x
+          <div class="canvas-actions">
+            <button onclick={copyImage} disabled={isRecording || motionData.length < 2}>
+              Copy Image
             </button>
-          {/each}
+            <button onclick={clearCanvas} disabled={isRecording}>
+              Clear
+            </button>
+          </div>
         </div>
-      </div>
-    {/if}
-  </div>
 
-  {#if descriptorEn}
-    <div class="descriptor-outputs">
-      <div class="descriptor-output">
-        <div class="output-header">
-          <h3>Motion Descriptor (EN)</h3>
-          <button onclick={() => copyDescriptor(descriptorEn)}>Copy</button>
-        </div>
-        <pre>{descriptorEn}</pre>
-      </div>
-      <div class="descriptor-output">
-        <div class="output-header">
-          <h3>Motion Descriptor (KO)</h3>
-          <button onclick={() => copyDescriptor(descriptorKo)}>Copy</button>
-        </div>
-        <pre>{descriptorKo}</pre>
+        {#if !isRecording && motionData.length > 1}
+          <div class="controls-row">
+            <div class="control-group">
+              <label>샘플 수: {sampleCount}</label>
+              <input type="range" min="5" max="150" step="1" bind:value={sampleCount} />
+            </div>
+          </div>
+          <div class="simulation-controls">
+            <button onclick={startPlayback}>
+              {isPlaying ? "⏹ Stop" : "▶ Play"}
+            </button>
+            <button onclick={() => drawCanvas()}>
+              원본 보기
+            </button>
+            <div class="speed-controls">
+              <span>속도:</span>
+              {#each [0.5, 1, 2] as speed}
+                <button class:active={playbackSpeed === speed} onclick={() => { playbackSpeed = speed }}>
+                  {speed}x
+                </button>
+              {/each}
+            </div>
+          </div>
+        {/if}
       </div>
     </div>
-  {/if}
+
+    <div class="right-column">
+      {#if !descriptorEn}
+        <div class="empty-state">캔버스에 모션을 그리면 표시됩니다.</div>
+      {/if}
+      {#if descriptorEn}
+        <div class="descriptor-output">
+          <div class="output-header">
+            <h3>Motion Descriptor (EN)</h3>
+            <button onclick={() => copyDescriptor(descriptorEn)}>Copy</button>
+          </div>
+          <pre>{descriptorEn}</pre>
+        </div>
+        <div class="descriptor-output">
+          <div class="output-header">
+            <h3>Motion Descriptor (KO)</h3>
+            <button onclick={() => copyDescriptor(descriptorKo)}>Copy</button>
+          </div>
+          <pre>{descriptorKo}</pre>
+        </div>
+      {/if}
+    </div>
+  </div>
 </div>
 
 <style>
   .tool-page {
     padding: 2rem;
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
   }
 
@@ -492,28 +499,23 @@
     color: #888;
   }
 
-  .instructions {
-    background: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    align-items: start;
   }
 
-  .instructions h3 {
-    margin-top: 0;
-    font-size: 1rem;
-    color: #0e639c;
+  .left-column {
+    min-width: 0;
   }
 
-  .instructions ol {
-    margin: 0.5rem 0 0 1.5rem;
-    padding: 0;
-  }
-
-  .instructions li {
-    margin: 0.5rem 0;
-    color: #ccc;
+  .right-column {
+    position: sticky;
+    top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .canvas-container {
@@ -524,7 +526,6 @@
 
   canvas {
     width: 100%;
-    max-width: 800px;
     height: 400px;
     background: #1a1a1a;
     border: 2px solid #333;
@@ -546,7 +547,6 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    max-width: 800px;
   }
 
   .legend-bar {
@@ -609,65 +609,17 @@
     cursor: not-allowed;
   }
 
-  .descriptor-output {
-    margin-top: 2rem;
-    background: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 1.5rem;
-  }
-
-  .output-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-
-  .output-header h3 {
-    margin: 0;
-    font-size: 1rem;
-    color: #0e639c;
-  }
-
-  .output-header button {
-    padding: 0.5rem 1rem;
-    background: #0e639c;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-
-  .output-header button:hover {
-    background: #1177bb;
-  }
-
-  pre {
-    margin: 0;
-    padding: 1rem;
-    background: #0d0d0d;
-    border: 1px solid #222;
-    border-radius: 4px;
-    color: #e0e0e0;
-    font-family: monospace;
-    font-size: 0.9rem;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-x: auto;
-  }
-
   .controls-row {
     display: flex;
     align-items: center;
     gap: 2rem;
-    margin-bottom: 1rem;
   }
 
   .control-group {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
   }
 
   .control-group label {
@@ -677,10 +629,59 @@
   }
 
   .control-group input[type="range"] {
-    width: 200px;
+    width: 100%;
     accent-color: #0e639c;
   }
 
+  .descriptor-output {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+  }
+
+  .output-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .output-header h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #0e639c;
+  }
+
+  .output-header button {
+    padding: 0.35rem 0.75rem;
+    background: #0e639c;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.8rem;
+  }
+
+  .output-header button:hover {
+    background: #1177bb;
+  }
+
+  pre {
+    margin: 0;
+    padding: 0.75rem;
+    background: #0d0d0d;
+    border: 1px solid #222;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-family: monospace;
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-x: auto;
+    max-height: 300px;
+    overflow-y: auto;
+  }
 
   .simulation-controls {
     display: flex;
@@ -734,10 +735,12 @@
     background: #444;
   }
 
-  .descriptor-outputs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-top: 2rem;
+  .empty-state {
+    color: #555;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 2rem 1rem;
+    border: 1px dashed #333;
+    border-radius: 8px;
   }
 </style>

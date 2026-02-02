@@ -105,7 +105,11 @@ fn detect_shape(points: &[MotionPoint], dx: f64, dy: f64) -> String {
     }
 }
 
-fn generate_descriptor_text(analysis: &MotionAnalysis, points: &[MotionPoint], sample_count: u32) -> String {
+fn generate_descriptor_text(
+    analysis: &MotionAnalysis,
+    points: &[MotionPoint],
+    sample_count: u32,
+) -> String {
     let speed_desc = if analysis.average_speed > 300.0 {
         "fast"
     } else if analysis.average_speed > 100.0 {
@@ -253,7 +257,11 @@ fn generate_descriptor_text(analysis: &MotionAnalysis, points: &[MotionPoint], s
     )
 }
 
-fn generate_descriptor_text_ko(analysis: &MotionAnalysis, points: &[MotionPoint], sample_count: u32) -> String {
+fn generate_descriptor_text_ko(
+    analysis: &MotionAnalysis,
+    points: &[MotionPoint],
+    sample_count: u32,
+) -> String {
     let speed_desc = if analysis.average_speed > 300.0 {
         "빠름"
     } else if analysis.average_speed > 100.0 {
@@ -280,9 +288,21 @@ fn generate_descriptor_text_ko(analysis: &MotionAnalysis, points: &[MotionPoint]
         .iter()
         .step_by((points.len() / sample_count as usize).max(1))
         .map(|p| {
-            let nx = if max_x > min_x { (p.x - min_x) / (max_x - min_x) } else { 0.5 };
-            let ny = if max_y > min_y { (p.y - min_y) / (max_y - min_y) } else { 0.5 };
-            let nt = if total_duration > 0.0 { p.timestamp as f64 / total_duration } else { 0.0 };
+            let nx = if max_x > min_x {
+                (p.x - min_x) / (max_x - min_x)
+            } else {
+                0.5
+            };
+            let ny = if max_y > min_y {
+                (p.y - min_y) / (max_y - min_y)
+            } else {
+                0.5
+            };
+            let nt = if total_duration > 0.0 {
+                p.timestamp as f64 / total_duration
+            } else {
+                0.0
+            };
             format!("위치:({:.2},{:.2}) t:{:.2}", nx, ny, nt)
         })
         .collect();
@@ -293,7 +313,11 @@ fn generate_descriptor_text_ko(analysis: &MotionAnalysis, points: &[MotionPoint]
             let dy = points[i].y - points[i - 1].y;
             let dt = (points[i].timestamp - points[i - 1].timestamp) as f64;
             let distance = (dx * dx + dy * dy).sqrt();
-            if dt > 0.0 { distance / dt } else { 0.0 }
+            if dt > 0.0 {
+                distance / dt
+            } else {
+                0.0
+            }
         })
         .collect();
 
@@ -306,11 +330,17 @@ fn generate_descriptor_text_ko(analysis: &MotionAnalysis, points: &[MotionPoint]
     };
 
     let acceleration_pattern = if speeds.len() > 2 {
-        let first_half_avg = speeds[..speeds.len() / 2].iter().sum::<f64>() / (speeds.len() / 2) as f64;
-        let second_half_avg = speeds[speeds.len() / 2..].iter().sum::<f64>() / (speeds.len() - speeds.len() / 2) as f64;
-        if second_half_avg > first_half_avg * 1.2 { "가속" }
-        else if first_half_avg > second_half_avg * 1.2 { "감속" }
-        else { "일정" }
+        let first_half_avg =
+            speeds[..speeds.len() / 2].iter().sum::<f64>() / (speeds.len() / 2) as f64;
+        let second_half_avg = speeds[speeds.len() / 2..].iter().sum::<f64>()
+            / (speeds.len() - speeds.len() / 2) as f64;
+        if second_half_avg > first_half_avg * 1.2 {
+            "가속"
+        } else if first_half_avg > second_half_avg * 1.2 {
+            "감속"
+        } else {
+            "일정"
+        }
     } else {
         "일정"
     };
@@ -372,9 +402,14 @@ fn generate_descriptor_text_ko(analysis: &MotionAnalysis, points: &[MotionPoint]
         points.len(),
         speed_variation,
         acceleration_pattern,
-        start.x, start.y,
-        mid.x, mid.y, mid.timestamp,
-        end.x, end.y, end.timestamp,
+        start.x,
+        start.y,
+        mid.x,
+        mid.y,
+        mid.timestamp,
+        end.x,
+        end.y,
+        end.timestamp,
         sample_count,
         normalized_points.join(" -> "),
         speed_desc,
@@ -394,7 +429,10 @@ fn generate_descriptor_text_ko(analysis: &MotionAnalysis, points: &[MotionPoint]
 
 #[tauri::command]
 #[specta::specta]
-pub fn generate_motion_descriptor(motion_data: String, sample_count: u32) -> Result<MotionDescriptorResult, String> {
+pub fn generate_motion_descriptor(
+    motion_data: String,
+    sample_count: u32,
+) -> Result<MotionDescriptorResult, String> {
     // Parse JSON
     let points: Vec<MotionPoint> =
         serde_json::from_str(&motion_data).map_err(|e| format!("Failed to parse JSON: {}", e))?;

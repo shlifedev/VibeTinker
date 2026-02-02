@@ -565,16 +565,6 @@
     </div>
   {/if}
 
-  <div class="instructions">
-    <h3>사용 방법</h3>
-    <ol>
-      <li>스프라이트 시트 이미지를 불러옵니다</li>
-      <li>타일 크기를 설정합니다 (가로/세로 픽셀)</li>
-      <li>셀을 클릭하여 설명을 입력하거나 프리셋 태그를 사용합니다</li>
-      <li>JSON 또는 텍스트 리스트 형식으로 내보냅니다</li>
-    </ol>
-  </div>
-
   <div class="control-panel">
     <div class="control-section">
       <h3>이미지 불러오기</h3>
@@ -652,17 +642,6 @@
   </div>
 
   {#if spriteImage}
-    <div class="canvas-container">
-      <canvas
-        bind:this={canvas}
-        width="600"
-        height="450"
-        class:multi-mode={selectionMode === "multi"}
-        onclick={handleCanvasClick}
-      >
-      </canvas>
-    </div>
-
     <div class="tags-toolbar">
       <div class="toolbar-header">
         <h3>프리셋 태그</h3>
@@ -704,6 +683,17 @@
       {#if selectionMode === "multi" && selectedCells.size === 0}
         <p class="toolbar-hint">멀티 선택 모드에서 셀을 선택한 후 태그를 클릭하세요</p>
       {/if}
+    </div>
+
+    <div class="canvas-container">
+      <canvas
+        bind:this={canvas}
+        width="600"
+        height="450"
+        class:multi-mode={selectionMode === "multi"}
+        onclick={handleCanvasClick}
+      >
+      </canvas>
     </div>
   {:else}
     <div class="empty-state">
