@@ -17,6 +17,13 @@
   let outputFormat = $state<"rowcol" | "index">("rowcol")
   let canvas = $state<HTMLCanvasElement | null>(null)
 
+  // Auto-redraw when grid dimensions change
+  $effect(() => {
+    if (gridRows || gridCols || canvas) {
+      drawGrid()
+    }
+  })
+
   function cellKey(row: number, col: number): string {
     return `${row}-${col}`
   }
@@ -58,10 +65,26 @@
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
+    // Preserve aspect ratio
+    const aspectRatio = spriteImage.width / spriteImage.height
+    const maxWidth = 800
+    const maxHeight = 600
+
+    let canvasWidth = maxWidth
+    let canvasHeight = maxWidth / aspectRatio
+
+    if (canvasHeight > maxHeight) {
+      canvasHeight = maxHeight
+      canvasWidth = maxHeight * aspectRatio
+    }
+
+    canvas.width = canvasWidth
+    canvas.height = canvasHeight
+
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    // Draw sprite sheet image
+    // Draw sprite sheet image (now properly sized)
     ctx.drawImage(spriteImage, 0, 0, canvas.width, canvas.height)
 
     const cellWidth = canvas.width / gridCols
@@ -147,7 +170,6 @@
             min="1"
             max="50"
             bind:value={gridRows}
-            onchange={() => drawGrid()}
           />
         </label>
         <label>
@@ -157,7 +179,6 @@
             min="1"
             max="50"
             bind:value={gridCols}
-            onchange={() => drawGrid()}
           />
         </label>
       </div>
