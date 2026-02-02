@@ -42,8 +42,8 @@
       const img = new Image()
       img.onload = () => {
         spriteImage = img
-        cellDescriptions.clear()
-        selectedCells.clear()
+        cellDescriptions = new Map()
+        selectedCells = new Set()
         drawGrid()
       }
       img.src = evt.target?.result as string
@@ -53,8 +53,57 @@
   }
 
   function drawGrid() {
-    // Placeholder - will implement in next task
-    console.log("drawGrid called")
+    if (!canvas || !spriteImage) return
+
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    // Draw sprite sheet image
+    ctx.drawImage(spriteImage, 0, 0, canvas.width, canvas.height)
+
+    const cellWidth = canvas.width / gridCols
+    const cellHeight = canvas.height / gridRows
+
+    // Draw grid lines
+    ctx.strokeStyle = "#ffffff40"
+    ctx.lineWidth = 1
+
+    for (let i = 0; i <= gridRows; i++) {
+      ctx.beginPath()
+      ctx.moveTo(0, i * cellHeight)
+      ctx.lineTo(canvas.width, i * cellHeight)
+      ctx.stroke()
+    }
+
+    for (let i = 0; i <= gridCols; i++) {
+      ctx.beginPath()
+      ctx.moveTo(i * cellWidth, 0)
+      ctx.lineTo(i * cellWidth, canvas.height)
+      ctx.stroke()
+    }
+
+    // Highlight cells with descriptions
+    cellDescriptions.forEach((desc, key) => {
+      const { row, col } = parseKey(key)
+      ctx.fillStyle = "rgba(14, 99, 156, 0.3)"
+      ctx.fillRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight)
+
+      // Draw checkmark for cells with descriptions
+      ctx.fillStyle = "#4CAF50"
+      ctx.font = "16px sans-serif"
+      ctx.fillText("✓", col * cellWidth + 5, row * cellHeight + 20)
+    })
+
+    // Highlight selected cells (multi mode)
+    selectedCells.forEach(key => {
+      const { row, col } = parseKey(key)
+      ctx.strokeStyle = "#0e639c"
+      ctx.lineWidth = 3
+      ctx.strokeRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight)
+    })
   }
 </script>
 
@@ -119,7 +168,7 @@
       <div class="mode-toggle">
         <button
           class:active={selectionMode === "single"}
-          onclick={() => { selectionMode = "single"; selectedCells.clear() }}
+          onclick={() => { selectionMode = "single"; selectedCells = new Set() }}
         >
           단일 선택
         </button>
@@ -135,6 +184,22 @@
       {/if}
     </div>
   </div>
+
+  {#if spriteImage}
+    <div class="canvas-container">
+      <canvas
+        bind:this={canvas}
+        width="800"
+        height="600"
+        class:multi-mode={selectionMode === "multi"}
+      >
+      </canvas>
+    </div>
+  {:else}
+    <div class="empty-state">
+      <p>이미지를 불러와서 시작하세요</p>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -267,5 +332,38 @@
     margin-top: 0.5rem;
     font-size: 0.85rem;
     color: #4CAF50;
+  }
+
+  .canvas-container {
+    margin-bottom: 2rem;
+  }
+
+  canvas {
+    width: 100%;
+    max-width: 800px;
+    height: auto;
+    background: #1a1a1a;
+    border: 2px solid #333;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+
+  canvas.multi-mode {
+    cursor: crosshair;
+  }
+
+  .empty-state {
+    padding: 4rem 2rem;
+    text-align: center;
+    background: #1a1a1a;
+    border: 2px dashed #333;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+  }
+
+  .empty-state p {
+    margin: 0;
+    color: #666;
+    font-size: 1.1rem;
   }
 </style>
