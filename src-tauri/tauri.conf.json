@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "New App",
+  "productName": "VibeTinker",
   "version": "0.1.0",
-  "identifier": "com.example.new-app",
+  "identifier": "com.vibetinker.app",
   "build": {
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "New App",
+        "title": "VibeTinker",
         "width": 900,
         "height": 600,
         "minWidth": 640,
