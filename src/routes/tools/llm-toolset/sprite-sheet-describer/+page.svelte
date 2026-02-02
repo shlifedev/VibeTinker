@@ -6,8 +6,10 @@
 
   let spriteImage = $state<HTMLImageElement | null>(null)
   let imageFile = $state<File | null>(null)
-  let gridRows = $state(4)
-  let gridCols = $state(4)
+  let tileWidth = $state(32)
+  let tileHeight = $state(32)
+  let gridRows = $derived(spriteImage ? Math.max(1, Math.floor(spriteImage.height / tileHeight)) : 1)
+  let gridCols = $derived(spriteImage ? Math.max(1, Math.floor(spriteImage.width / tileWidth)) : 1)
   let cellDescriptions = $state<Map<string, string>>(new Map())
   let selectedCells = $state<Set<string>>(new Set())
   let selectionMode = $state<"single" | "multi">("single")
@@ -23,21 +25,24 @@
     setTimeout(() => { errorMessage = null }, 4000)
   }
 
-  function validateGridSize(value: number, name: string) {
+  function validateTileSize(value: number, name: string): number {
     if (value < 1) {
       showError(`${name}은(는) 1 이상이어야 합니다.`)
       return 1
     }
-    if (value > 50) {
-      showError(`${name}은(는) 50 이하여야 합니다.`)
-      return 50
+    if (spriteImage) {
+      const maxSize = name === "타일 가로" ? spriteImage.width : spriteImage.height
+      if (value > maxSize) {
+        showError(`${name}은(는) ${maxSize} 이하여야 합니다.`)
+        return maxSize
+      }
     }
     return value
   }
 
-  // Auto-redraw when grid dimensions change
+  // Auto-redraw when tile dimensions change
   $effect(() => {
-    if (gridRows || gridCols || canvas) {
+    if ((tileWidth || tileHeight) && canvas) {
       drawGrid()
     }
   })
@@ -186,7 +191,7 @@
   interface ProjectData {
     imageName: string
     imageDataUrl: string
-    gridSize: { rows: number, cols: number }
+    gridSize: { rows: number, cols: number, tileWidth: number, tileHeight: number }
     descriptions: Record<string, string>
     customTags: string[]
   }
@@ -211,7 +216,7 @@
     const projectData: ProjectData = {
       imageName: imageFile.name,
       imageDataUrl,
-      gridSize: { rows: gridRows, cols: gridCols },
+      gridSize: { rows: gridRows, cols: gridCols, tileWidth, tileHeight },
       descriptions,
       customTags
     }
@@ -244,8 +249,8 @@
         img.onload = () => {
           spriteImage = img
           imageFile = new File([projectData.imageDataUrl], projectData.imageName, { type: "image/png" })
-          gridRows = projectData.gridSize.rows
-          gridCols = projectData.gridSize.cols
+          tileWidth = projectData.gridSize.tileWidth || 32
+          tileHeight = projectData.gridSize.tileHeight || 32
 
           // Load descriptions
           cellDescriptions.clear()
@@ -277,8 +282,8 @@
     imageFile = null
     cellDescriptions = new Map()
     selectedCells = new Set()
-    gridRows = 4
-    gridCols = 4
+    tileWidth = 32
+    tileHeight = 32
     if (canvas) {
       const ctx = canvas.getContext("2d")
       if (ctx) {
@@ -345,8 +350,8 @@
 
     // Preserve aspect ratio
     const aspectRatio = spriteImage.width / spriteImage.height
-    const maxWidth = 800
-    const maxHeight = 600
+    const maxWidth = 600
+    const maxHeight = 450
 
     let canvasWidth = maxWidth
     let canvasHeight = maxWidth / aspectRatio
@@ -392,10 +397,17 @@
       ctx.fillStyle = "rgba(14, 99, 156, 0.3)"
       ctx.fillRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight)
 
-      // Draw checkmark for cells with descriptions
-      ctx.fillStyle = "#4CAF50"
-      ctx.font = "16px sans-serif"
-      ctx.fillText("✓", col * cellWidth + 5, row * cellHeight + 20)
+      // Draw description text on cell
+      ctx.fillStyle = "#fff"
+      ctx.font = `${Math.min(14, cellHeight * 0.3)}px sans-serif`
+      ctx.textAlign = "center"
+      ctx.textBaseline = "middle"
+
+      const maxChars = Math.max(2, Math.floor(cellWidth / 8))
+      const displayText = desc.length > maxChars ? desc.slice(0, maxChars - 1) + "…" : desc
+      ctx.fillText(displayText, col * cellWidth + cellWidth / 2, row * cellHeight + cellHeight / 2)
+      ctx.textAlign = "start"
+      ctx.textBaseline = "alphabetic"
     })
 
     // Highlight selected cells (multi mode)
@@ -540,7 +552,7 @@
     <h3>사용 방법</h3>
     <ol>
       <li>스프라이트 시트 이미지를 불러옵니다</li>
-      <li>그리드 크기를 설정합니다 (행/열)</li>
+      <li>타일 크기를 설정합니다 (가로/세로 픽셀)</li>
       <li>셀을 클릭하여 설명을 입력하거나 프리셋 태그를 사용합니다</li>
       <li>JSON 또는 텍스트 리스트 형식으로 내보냅니다</li>
     </ol>
@@ -561,35 +573,34 @@
     </div>
 
     <div class="control-section">
-      <h3>그리드 설정</h3>
+      <h3>타일 크기 (px)</h3>
       <div class="grid-inputs">
         <label>
-          행:
+          가로:
           <input
             type="number"
             min="1"
-            max="50"
-            bind:value={gridRows}
+            bind:value={tileWidth}
             onchange={() => {
-              gridRows = validateGridSize(gridRows, "행")
-              drawGrid()
+              tileWidth = validateTileSize(tileWidth, "타일 가로")
             }}
           />
         </label>
         <label>
-          열:
+          세로:
           <input
             type="number"
             min="1"
-            max="50"
-            bind:value={gridCols}
+            bind:value={tileHeight}
             onchange={() => {
-              gridCols = validateGridSize(gridCols, "열")
-              drawGrid()
+              tileHeight = validateTileSize(tileHeight, "타일 세로")
             }}
           />
         </label>
       </div>
+      {#if spriteImage}
+        <span class="grid-info">{gridCols}×{gridRows} 그리드 ({spriteImage.width}×{spriteImage.height}px)</span>
+      {/if}
     </div>
 
     <div class="control-section">
@@ -627,8 +638,8 @@
     <div class="canvas-container">
       <canvas
         bind:this={canvas}
-        width="800"
-        height="600"
+        width="600"
+        height="450"
         class:multi-mode={selectionMode === "multi"}
         onclick={handleCanvasClick}
       >
@@ -934,6 +945,13 @@
     border-radius: 4px;
   }
 
+  .grid-info {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: #888;
+  }
+
   .mode-toggle {
     display: flex;
     gap: 0.5rem;
@@ -999,7 +1017,7 @@
 
   canvas {
     width: 100%;
-    max-width: 800px;
+    max-width: 600px;
     height: auto;
     background: #1a1a1a;
     border: 2px solid #333;
