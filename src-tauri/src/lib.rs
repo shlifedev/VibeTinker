@@ -1,4 +1,5 @@
 mod command;
+pub mod tools;
 
 #[cfg(debug_assertions)]
 use specta_typescript::Typescript;
@@ -16,7 +17,11 @@ pub struct AppState {}
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri_specta::Builder::<tauri::Wry>::new()
-        .commands(collect_commands![command::greet,])
+        .commands(collect_commands![
+            command::greet,
+            tools::encoding::base64_encode,
+            tools::encoding::base64_decode,
+        ])
         .events(collect_events![]);
 
     #[cfg(debug_assertions)]

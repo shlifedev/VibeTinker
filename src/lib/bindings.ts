@@ -7,6 +7,17 @@
 export const commands = {
 async greet(name: string) : Promise<string> {
     return await TAURI_INVOKE("greet", { name });
+},
+async base64Encode(input: string) : Promise<string> {
+    return await TAURI_INVOKE("base64_encode", { input });
+},
+async base64Decode(input: string) : Promise<Result<string, Base64Error>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("base64_decode", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -20,7 +31,7 @@ async greet(name: string) : Promise<string> {
 
 /** user-defined types **/
 
-
+export type Base64Error = { DecodeError: string } | "Utf8Error"
 
 /** tauri-specta globals **/
 

@@ -1,33 +1,28 @@
 <script lang="ts">
-  import { commands } from "$lib/bindings"
-
-  let name = $state("World")
-  let greeting = $state("")
-
-  async function handleGreet() {
-    greeting = await commands.greet(name)
-  }
 </script>
 
-<div class="container">
-  <h1>New App</h1>
-  <input type="text" bind:value={name} placeholder="Enter name" />
-  <button onclick={handleGreet}>Greet</button>
-  {#if greeting}
-    <p>{greeting}</p>
-  {/if}
+<div class="home">
+  <h1>Dev Tools</h1>
+  <p>좌측 사이드바에서 도구를 선택하세요.</p>
 </div>
 
 <style>
-  .container {
-    padding: 2rem;
+  .home {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 80vh;
     text-align: center;
   }
-  input {
-    padding: 0.5rem;
-    margin-right: 0.5rem;
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
   }
-  button {
-    padding: 0.5rem 1rem;
+
+  p {
+    color: #888;
   }
 </style>

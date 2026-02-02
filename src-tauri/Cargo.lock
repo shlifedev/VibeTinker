@@ -2034,6 +2034,7 @@ dependencies = [
 name = "new-app"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "chrono",
  "once_cell",
  "serde",
