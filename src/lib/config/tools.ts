@@ -22,7 +22,8 @@ export const toolCategories: ToolCategory[] = [
     id: "llm-toolset",
     name: "LLM 도구",
     tools: [
-      { id: "motion-descriptor", name: "Motion Descriptor", path: "/tools/llm-toolset/motion-descriptor" }
+      { id: "motion-descriptor", name: "Motion Descriptor", path: "/tools/llm-toolset/motion-descriptor" },
+      { id: "sprite-sheet-describer", name: "Sprite Sheet Describer", path: "/tools/llm-toolset/sprite-sheet-describer" }
     ]
   }
 ]
