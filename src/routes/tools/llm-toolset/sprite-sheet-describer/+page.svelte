@@ -106,6 +106,65 @@
     }
   }
 
+  function generateJSON(): string {
+    const cells = Array.from(cellDescriptions.entries()).map(([key, description]) => {
+      const { row, col } = parseKey(key)
+
+      if (outputFormat === "index") {
+        return {
+          index: cellToIndex(row, col),
+          description
+        }
+      } else {
+        return {
+          row,
+          col,
+          description
+        }
+      }
+    })
+
+    const output = {
+      gridSize: { rows: gridRows, cols: gridCols },
+      format: outputFormat,
+      cells
+    }
+
+    return JSON.stringify(output, null, 2)
+  }
+
+  function generateTextList(): string {
+    const lines = Array.from(cellDescriptions.entries())
+      .map(([key, description]) => {
+        const { row, col } = parseKey(key)
+
+        if (outputFormat === "index") {
+          const index = cellToIndex(row, col)
+          return `[${index}] ${description}`
+        } else {
+          return `[${row},${col}] ${description}`
+        }
+      })
+      .sort()
+
+    return lines.join("\n")
+  }
+
+  let jsonOutput = $derived(cellDescriptions.size > 0 ? generateJSON() : "")
+  let textOutput = $derived(cellDescriptions.size > 0 ? generateTextList() : "")
+
+  let copyFeedback = $state<string | null>(null)
+
+  async function copyToClipboard(text: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(text)
+      copyFeedback = label
+      setTimeout(() => { copyFeedback = null }, 2000)
+    } catch (err) {
+      console.error("Failed to copy:", err)
+    }
+  }
+
   function handleFileSelect(e: Event) {
     const input = e.target as HTMLInputElement
     const file = input.files?.[0]
@@ -508,6 +567,54 @@
           <button class="btn-secondary" onclick={closeModal}>취소</button>
           <button class="btn-danger" onclick={deleteDescription}>삭제</button>
           <button class="btn-primary" onclick={saveDescription}>저장</button>
+        </div>
+      </div>
+    </div>
+  {/if}
+
+  {#if cellDescriptions.size > 0}
+    <div class="output-section">
+      <div class="output-header">
+        <h3>출력</h3>
+        <div class="format-toggle">
+          <label>
+            <input
+              type="radio"
+              value="rowcol"
+              bind:group={outputFormat}
+            />
+            Row/Col
+          </label>
+          <label>
+            <input
+              type="radio"
+              value="index"
+              bind:group={outputFormat}
+            />
+            Index
+          </label>
+        </div>
+      </div>
+
+      <div class="output-panels">
+        <div class="output-panel">
+          <div class="panel-header">
+            <h4>JSON</h4>
+            <button onclick={() => copyToClipboard(jsonOutput, "JSON")}>
+              {copyFeedback === "JSON" ? "복사됨!" : "Copy"}
+            </button>
+          </div>
+          <pre>{jsonOutput}</pre>
+        </div>
+
+        <div class="output-panel">
+          <div class="panel-header">
+            <h4>텍스트 리스트</h4>
+            <button onclick={() => copyToClipboard(textOutput, "텍스트")}>
+              {copyFeedback === "텍스트" ? "복사됨!" : "Copy"}
+            </button>
+          </div>
+          <pre>{textOutput}</pre>
         </div>
       </div>
     </div>
@@ -996,5 +1103,97 @@
   .modal-body input[type="text"]:focus {
     outline: none;
     border-color: #4CAF50;
+  }
+
+  .output-section {
+    margin-top: 2rem;
+  }
+
+  .output-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .output-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #0e639c;
+  }
+
+  .format-toggle {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .format-toggle label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #ccc;
+    cursor: pointer;
+  }
+
+  .format-toggle input[type="radio"] {
+    cursor: pointer;
+    accent-color: #0e639c;
+  }
+
+  .output-panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .output-panel {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #252526;
+    border-bottom: 1px solid #333;
+  }
+
+  .panel-header h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #0e639c;
+  }
+
+  .panel-header button {
+    padding: 0.4rem 0.8rem;
+    background: #0e639c;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+
+  .panel-header button:hover {
+    background: #1177bb;
+  }
+
+  .output-panel pre {
+    margin: 0;
+    padding: 1rem;
+    background: #0d0d0d;
+    color: #e0e0e0;
+    font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
   }
 </style>
