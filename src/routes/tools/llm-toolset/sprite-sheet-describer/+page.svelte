@@ -1,5 +1,61 @@
 <script lang="ts">
-  // State will be added in next task
+  interface CellKey {
+    row: number
+    col: number
+  }
+
+  let spriteImage = $state<HTMLImageElement | null>(null)
+  let imageFile = $state<File | null>(null)
+  let gridRows = $state(4)
+  let gridCols = $state(4)
+  let cellDescriptions = $state<Map<string, string>>(new Map())
+  let selectedCells = $state<Set<string>>(new Set())
+  let selectionMode = $state<"single" | "multi">("single")
+  let showModal = $state(false)
+  let currentCell = $state<CellKey | null>(null)
+  let customTags = $state<string[]>([])
+  let outputFormat = $state<"rowcol" | "index">("rowcol")
+  let canvas = $state<HTMLCanvasElement | null>(null)
+
+  function cellKey(row: number, col: number): string {
+    return `${row}-${col}`
+  }
+
+  function parseKey(key: string): CellKey {
+    const [row, col] = key.split("-").map(Number)
+    return { row, col }
+  }
+
+  function cellToIndex(row: number, col: number): number {
+    return row * gridCols + col
+  }
+
+  function handleFileSelect(e: Event) {
+    const input = e.target as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file) return
+
+    imageFile = file
+    const reader = new FileReader()
+
+    reader.onload = (evt) => {
+      const img = new Image()
+      img.onload = () => {
+        spriteImage = img
+        cellDescriptions.clear()
+        selectedCells.clear()
+        drawGrid()
+      }
+      img.src = evt.target?.result as string
+    }
+
+    reader.readAsDataURL(file)
+  }
+
+  function drawGrid() {
+    // Placeholder - will implement in next task
+    console.log("drawGrid called")
+  }
 </script>
 
 <div class="tool-page">
@@ -16,6 +72,68 @@
       <li>셀을 클릭하여 설명을 입력하거나 프리셋 태그를 사용합니다</li>
       <li>JSON 또는 텍스트 리스트 형식으로 내보냅니다</li>
     </ol>
+  </div>
+
+  <div class="control-panel">
+    <div class="control-section">
+      <h3>이미지 불러오기</h3>
+      <input
+        type="file"
+        accept="image/*"
+        onchange={handleFileSelect}
+        class="file-input"
+      />
+      {#if imageFile}
+        <span class="file-name">{imageFile.name}</span>
+      {/if}
+    </div>
+
+    <div class="control-section">
+      <h3>그리드 설정</h3>
+      <div class="grid-inputs">
+        <label>
+          행:
+          <input
+            type="number"
+            min="1"
+            max="50"
+            bind:value={gridRows}
+            onchange={() => drawGrid()}
+          />
+        </label>
+        <label>
+          열:
+          <input
+            type="number"
+            min="1"
+            max="50"
+            bind:value={gridCols}
+            onchange={() => drawGrid()}
+          />
+        </label>
+      </div>
+    </div>
+
+    <div class="control-section">
+      <h3>선택 모드</h3>
+      <div class="mode-toggle">
+        <button
+          class:active={selectionMode === "single"}
+          onclick={() => { selectionMode = "single"; selectedCells.clear() }}
+        >
+          단일 선택
+        </button>
+        <button
+          class:active={selectionMode === "multi"}
+          onclick={() => selectionMode = "multi"}
+        >
+          멀티 선택
+        </button>
+      </div>
+      {#if selectionMode === "multi" && selectedCells.size > 0}
+        <span class="selection-count">{selectedCells.size}개 셀 선택됨</span>
+      {/if}
+    </div>
   </div>
 </div>
 
@@ -62,5 +180,92 @@
   .instructions li {
     margin: 0.5rem 0;
     color: #ccc;
+  }
+
+  .control-panel {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .control-section {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1rem;
+  }
+
+  .control-section h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.9rem;
+    color: #0e639c;
+  }
+
+  .file-input {
+    display: block;
+    color: #ccc;
+    font-size: 0.9rem;
+  }
+
+  .file-name {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #888;
+  }
+
+  .grid-inputs {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .grid-inputs label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #ccc;
+  }
+
+  .grid-inputs input {
+    width: 60px;
+    padding: 0.4rem;
+    background: #0d0d0d;
+    border: 1px solid #444;
+    color: #e0e0e0;
+    border-radius: 4px;
+  }
+
+  .mode-toggle {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .mode-toggle button {
+    padding: 0.5rem 1rem;
+    background: #333;
+    border: 1px solid #444;
+    color: #ccc;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+
+  .mode-toggle button:hover {
+    background: #444;
+  }
+
+  .mode-toggle button.active {
+    background: #0e639c;
+    border-color: #0e639c;
+    color: #fff;
+  }
+
+  .selection-count {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #4CAF50;
   }
 </style>
