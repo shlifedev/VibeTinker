@@ -37,6 +37,35 @@
     return row * gridCols + col
   }
 
+  const PRESET_TAGS = [
+    // 지형
+    "벽(위)", "벽(아래)", "벽(좌)", "벽(우)", "바닥", "천장",
+    // 구조물
+    "문", "창문", "계단", "사다리",
+    // 자연
+    "풀", "나무", "물", "돌",
+    // 상호작용
+    "상자", "스위치", "레버",
+    // 캐릭터
+    "idle", "walk", "run", "jump", "attack"
+  ]
+
+  function applyTag(tag: string) {
+    if (selectionMode === "single" && currentCell) {
+      const key = cellKey(currentCell.row, currentCell.col)
+      cellDescriptions.set(key, tag)
+      cellDescriptions = new Map(cellDescriptions)
+      drawGrid()
+    } else if (selectionMode === "multi" && selectedCells.size > 0) {
+      selectedCells.forEach(key => {
+        cellDescriptions.set(key, tag)
+      })
+      cellDescriptions = new Map(cellDescriptions)
+      selectedCells = new Set()
+      drawGrid()
+    }
+  }
+
   function handleFileSelect(e: Event) {
     const input = e.target as HTMLInputElement
     const file = input.files?.[0]
@@ -342,6 +371,24 @@
       >
       </canvas>
     </div>
+
+    <div class="tags-toolbar">
+      <h3>프리셋 태그</h3>
+      <div class="tags-toolbar-content">
+        {#each PRESET_TAGS as tag}
+          <button
+            class="tag-btn preset-tag"
+            onclick={() => applyTag(tag)}
+            disabled={selectionMode === "single" || selectedCells.size === 0}
+          >
+            {tag}
+          </button>
+        {/each}
+      </div>
+      {#if selectionMode === "multi" && selectedCells.size === 0}
+        <p class="toolbar-hint">멀티 선택 모드에서 셀을 선택한 후 태그를 클릭하세요</p>
+      {/if}
+    </div>
   {:else}
     <div class="empty-state">
       <p>이미지를 불러와서 시작하세요</p>
@@ -368,6 +415,20 @@
             placeholder="셀 설명을 입력하세요..."
             rows="4"
           ></textarea>
+
+          <div class="quick-tags">
+            <span class="tags-label">빠른 선택:</span>
+            <div class="tags-grid">
+              {#each PRESET_TAGS as tag}
+                <button
+                  class="tag-btn preset-tag"
+                  onclick={() => { modalDescription = tag }}
+                >
+                  {tag}
+                </button>
+              {/each}
+            </div>
+          </div>
         </div>
 
         <div class="modal-footer">
@@ -694,5 +755,74 @@
 
   .btn-danger:hover {
     background: #f44336;
+  }
+
+  .quick-tags {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #333;
+  }
+
+  .tags-label {
+    display: block;
+    font-size: 0.85rem;
+    color: #888;
+    margin-bottom: 0.5rem;
+  }
+
+  .tags-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .tag-btn {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+
+  .preset-tag {
+    background: #0e639c;
+    color: #fff;
+  }
+
+  .preset-tag:hover:not(:disabled) {
+    background: #1177bb;
+    transform: translateY(-1px);
+  }
+
+  .tag-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .tags-toolbar {
+    background: #1e1e1e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .tags-toolbar h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: #0e639c;
+  }
+
+  .tags-toolbar-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .toolbar-hint {
+    margin: 1rem 0 0 0;
+    font-size: 0.85rem;
+    color: #666;
   }
 </style>
