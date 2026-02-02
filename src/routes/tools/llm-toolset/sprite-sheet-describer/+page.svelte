@@ -165,6 +165,118 @@
     }
   }
 
+  interface ProjectData {
+    imageName: string
+    imageDataUrl: string
+    gridSize: { rows: number, cols: number }
+    descriptions: Record<string, string>
+    customTags: string[]
+  }
+
+  async function saveProject() {
+    if (!spriteImage || !imageFile) return
+
+    const descriptions: Record<string, string> = {}
+    cellDescriptions.forEach((value, key) => {
+      descriptions[key] = value
+    })
+
+    // Convert image to data URL
+    const canvas = document.createElement("canvas")
+    canvas.width = spriteImage.width
+    canvas.height = spriteImage.height
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
+    ctx.drawImage(spriteImage, 0, 0)
+    const imageDataUrl = canvas.toDataURL("image/png")
+
+    const projectData: ProjectData = {
+      imageName: imageFile.name,
+      imageDataUrl,
+      gridSize: { rows: gridRows, cols: gridCols },
+      descriptions,
+      customTags
+    }
+
+    const blob = new Blob([JSON.stringify(projectData, null, 2)], {
+      type: "application/json"
+    })
+
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `sprite-sheet-project-${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function handleProjectLoad(e: Event) {
+    const input = e.target as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+
+    reader.onload = (evt) => {
+      try {
+        const projectData: ProjectData = JSON.parse(evt.target?.result as string)
+
+        // Load image
+        const img = new Image()
+        img.onload = () => {
+          spriteImage = img
+          imageFile = new File([projectData.imageDataUrl], projectData.imageName, { type: "image/png" })
+          gridRows = projectData.gridSize.rows
+          gridCols = projectData.gridSize.cols
+
+          // Load descriptions
+          cellDescriptions.clear()
+          Object.entries(projectData.descriptions).forEach(([key, value]) => {
+            cellDescriptions.set(key, value)
+          })
+          cellDescriptions = new Map(cellDescriptions)
+
+          // Load custom tags
+          customTags = projectData.customTags || []
+          saveCustomTags()
+
+          drawGrid()
+        }
+        img.src = projectData.imageDataUrl
+      } catch (err) {
+        console.error("Failed to load project:", err)
+        alert("프로젝트 파일을 불러올 수 없습니다.")
+      }
+    }
+
+    reader.readAsText(file)
+  }
+
+  function resetAll() {
+    if (!confirm("모든 데이터를 초기화하시겠습니까?")) return
+
+    spriteImage = null
+    imageFile = null
+    cellDescriptions = new Map()
+    selectedCells = new Set()
+    gridRows = 4
+    gridCols = 4
+    if (canvas) {
+      const ctx = canvas.getContext("2d")
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+      }
+    }
+  }
+
+  function clearDescriptions() {
+    if (!confirm("모든 설명을 삭제하시겠습니까?")) return
+
+    cellDescriptions = new Map()
+    selectedCells = new Set()
+    drawGrid()
+  }
+
   function handleFileSelect(e: Event) {
     const input = e.target as HTMLInputElement
     const file = input.files?.[0]
@@ -619,6 +731,30 @@
       </div>
     </div>
   {/if}
+
+  <div class="project-management">
+    <h3>프로젝트 관리</h3>
+    <div class="management-actions">
+      <button class="mgmt-btn save" onclick={saveProject} disabled={!spriteImage}>
+        💾 프로젝트 저장
+      </button>
+      <label class="mgmt-btn load">
+        📂 프로젝트 불러오기
+        <input
+          type="file"
+          accept="application/json"
+          onchange={handleProjectLoad}
+          style="display: none;"
+        />
+      </label>
+      <button class="mgmt-btn clear" onclick={clearDescriptions} disabled={cellDescriptions.size === 0}>
+        🗑️ 설명만 지우기
+      </button>
+      <button class="mgmt-btn reset" onclick={resetAll} disabled={!spriteImage}>
+        ♻️ 전체 초기화
+      </button>
+    </div>
+  </div>
 
   {#if showAddTagModal}
     <div class="modal-backdrop" onclick={() => showAddTagModal = false}>
@@ -1195,5 +1331,73 @@
     overflow-x: auto;
     max-height: 400px;
     overflow-y: auto;
+  }
+
+  .project-management {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid #333;
+  }
+
+  .project-management h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: #888;
+  }
+
+  .management-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .mgmt-btn {
+    padding: 0.75rem 1.25rem;
+    border: 1px solid #444;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+
+  .mgmt-btn.save {
+    background: #0e639c;
+    color: #fff;
+  }
+
+  .mgmt-btn.save:hover:not(:disabled) {
+    background: #1177bb;
+  }
+
+  .mgmt-btn.load {
+    background: #4CAF50;
+    color: #fff;
+  }
+
+  .mgmt-btn.load:hover {
+    background: #66BB6A;
+  }
+
+  .mgmt-btn.clear {
+    background: #ff9800;
+    color: #fff;
+  }
+
+  .mgmt-btn.clear:hover:not(:disabled) {
+    background: #ffa726;
+  }
+
+  .mgmt-btn.reset {
+    background: #d32f2f;
+    color: #fff;
+  }
+
+  .mgmt-btn.reset:hover:not(:disabled) {
+    background: #f44336;
+  }
+
+  .mgmt-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 </style>
