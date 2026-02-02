@@ -128,6 +128,91 @@
       ctx.strokeRect(col * cellWidth, row * cellHeight, cellWidth, cellHeight)
     })
   }
+
+  let lastSelectedCell = $state<CellKey | null>(null)
+
+  function handleCanvasClick(e: MouseEvent) {
+    if (!canvas || !spriteImage) return
+
+    const rect = canvas.getBoundingClientRect()
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    const x = (e.clientX - rect.left) * scaleX
+    const y = (e.clientY - rect.top) * scaleY
+
+    const cellWidth = canvas.width / gridCols
+    const cellHeight = canvas.height / gridRows
+
+    const col = Math.floor(x / cellWidth)
+    const row = Math.floor(y / cellHeight)
+
+    if (row < 0 || row >= gridRows || col < 0 || col >= gridCols) return
+
+    const key = cellKey(row, col)
+
+    if (selectionMode === "single") {
+      currentCell = { row, col }
+      showModal = true
+    } else {
+      // Multi mode - will implement in next task
+      if (e.ctrlKey || e.metaKey) {
+        if (selectedCells.has(key)) {
+          selectedCells.delete(key)
+        } else {
+          selectedCells.add(key)
+        }
+        selectedCells = new Set(selectedCells)
+      }
+      lastSelectedCell = { row, col }
+      drawGrid()
+    }
+  }
+
+  let modalDescription = $state("")
+
+  function openModal() {
+    if (!currentCell) return
+    const key = cellKey(currentCell.row, currentCell.col)
+    modalDescription = cellDescriptions.get(key) || ""
+  }
+
+  function saveDescription() {
+    if (!currentCell) return
+    const key = cellKey(currentCell.row, currentCell.col)
+
+    if (modalDescription.trim()) {
+      cellDescriptions.set(key, modalDescription.trim())
+    } else {
+      cellDescriptions.delete(key)
+    }
+
+    cellDescriptions = new Map(cellDescriptions)
+    showModal = false
+    modalDescription = ""
+    drawGrid()
+  }
+
+  function deleteDescription() {
+    if (!currentCell) return
+    const key = cellKey(currentCell.row, currentCell.col)
+    cellDescriptions.delete(key)
+    cellDescriptions = new Map(cellDescriptions)
+    showModal = false
+    modalDescription = ""
+    drawGrid()
+  }
+
+  function closeModal() {
+    showModal = false
+    modalDescription = ""
+    currentCell = null
+  }
+
+  $effect(() => {
+    if (showModal && currentCell) {
+      openModal()
+    }
+  })
 </script>
 
 <div class="tool-page">
@@ -213,12 +298,44 @@
         width="800"
         height="600"
         class:multi-mode={selectionMode === "multi"}
+        onclick={handleCanvasClick}
       >
       </canvas>
     </div>
   {:else}
     <div class="empty-state">
       <p>이미지를 불러와서 시작하세요</p>
+    </div>
+  {/if}
+
+  {#if showModal && currentCell}
+    <div class="modal-backdrop" onclick={closeModal}>
+      <div class="modal" onclick={(e) => e.stopPropagation()}>
+        <div class="modal-header">
+          <h3>
+            셀 설명 편집
+            <span class="cell-info">
+              (행: {currentCell.row}, 열: {currentCell.col},
+              인덱스: {cellToIndex(currentCell.row, currentCell.col)})
+            </span>
+          </h3>
+          <button class="close-btn" onclick={closeModal}>×</button>
+        </div>
+
+        <div class="modal-body">
+          <textarea
+            bind:value={modalDescription}
+            placeholder="셀 설명을 입력하세요..."
+            rows="4"
+          ></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-secondary" onclick={closeModal}>취소</button>
+          <button class="btn-danger" onclick={deleteDescription}>삭제</button>
+          <button class="btn-primary" onclick={saveDescription}>저장</button>
+        </div>
+      </div>
     </div>
   {/if}
 </div>
@@ -386,5 +503,129 @@
     margin: 0;
     color: #666;
     font-size: 1.1rem;
+  }
+
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal {
+    background: #1e1e1e;
+    border: 1px solid #444;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 1.5rem;
+    border-bottom: 1px solid #333;
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #0e639c;
+  }
+
+  .cell-info {
+    display: block;
+    font-size: 0.85rem;
+    color: #888;
+    font-weight: normal;
+    margin-top: 0.25rem;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    line-height: 1;
+  }
+
+  .close-btn:hover {
+    color: #fff;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-body textarea {
+    width: 100%;
+    padding: 0.75rem;
+    background: #0d0d0d;
+    border: 1px solid #444;
+    color: #e0e0e0;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+  }
+
+  .modal-body textarea:focus {
+    outline: none;
+    border-color: #0e639c;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    border-top: 1px solid #333;
+  }
+
+  .modal-footer button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .btn-primary {
+    background: #0e639c;
+    color: #fff;
+  }
+
+  .btn-primary:hover {
+    background: #1177bb;
+  }
+
+  .btn-secondary {
+    background: #333;
+    color: #ccc;
+  }
+
+  .btn-secondary:hover {
+    background: #444;
+  }
+
+  .btn-danger {
+    background: #d32f2f;
+    color: #fff;
+  }
+
+  .btn-danger:hover {
+    background: #f44336;
   }
 </style>
