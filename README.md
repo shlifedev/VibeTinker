@@ -1,122 +1,110 @@
 # VibeTinker
 
-> Your extensible workbench for developer tools, powered by LLM-assisted development
+LLM 지원을 통해 확장 가능한 개발자 도구 모음
 
-VibeTinker is a desktop application that lets you build your own collection of developer utilities with an intuitive sidebar interface. Add new tools on the fly using LLM assistance, making it your personalized productivity workbench.
+## 소개
 
-## ✨ Features
+VibeTinker는 사이드바 인터페이스로 다양한 개발 도구를 관리할 수 있는 데스크톱 애플리케이션입니다. LLM의 도움을 받아 새로운 도구를 추가하고, 기존 도구를 커스터마이징하여 나만의 워크벤치를 만들 수 있습니다.
 
-- 🎨 **Sidebar Navigation** - Clean, organized tool access
-- 🤖 **LLM-Powered Extension** - Build new tools with AI assistance
-- ⚡ **Native Performance** - Tauri + Rust backend for speed
-- 🎯 **Purpose-Built Tools** - Start with curated utilities, expand to your needs
+## 주요 기능
 
-## 🛠️ Built-in Tools
+- 사이드바 네비게이션으로 도구 구성
+- LLM 보조로 새 도구 빠르게 추가
+- Tauri + Rust 백엔드로 네이티브 성능
+- 카테고리별 도구 분류
+
+## 내장 도구
 
 ### 인코딩
-- **Base64** - Encode/decode text ↔ Base64
+- **Base64** - 텍스트 Base64 인코딩/디코딩
 
 ### LLM 도구
-- **Motion Descriptor** - Convert mouse gestures to natural language descriptions for LLM prompts
+- **Motion Descriptor** - 마우스 제스처를 자연어로 변환
 
 ### 게임 개발
-- **Sprite Sheet Describer** - Annotate sprite sheet grids with descriptions, export as JSON
-- **Tween Visualizer** - Visualize and compare 30+ easing functions
+- **Sprite Sheet Describer** - 스프라이트 시트에 설명 추가, JSON 출력
+- **Tween Visualizer** - 30+ 이징 함수 시각화 및 비교
 
-## 🚀 Quick Start
+## 시작하기
 
-### Prerequisites
-- [Bun](https://bun.sh) (Package manager)
-- [Rust](https://rustup.rs) (For Tauri backend)
+### 필수 요구사항
+- [Bun](https://bun.sh)
+- [Rust](https://rustup.rs)
 
-### Development
+### 개발 모드
 
 ```bash
-# Install dependencies
 bun install
-
-# Run in development mode
 bun run tauri dev
 ```
 
-### Build
+### 프로덕션 빌드
 
 ```bash
-# Build production app
 bun run tauri build
 ```
 
-## 📦 Tech Stack
+## 기술 스택
 
-- **Frontend**: SvelteKit 2.x + Svelte 5 with Skeleton UI
-- **Backend**: Rust + Tauri 2.0
-- **Type Safety**: tauri-specta for automatic TypeScript bindings
-- **Styling**: Tailwind CSS 4
+- Frontend: SvelteKit 2.x + Svelte 5, Skeleton UI
+- Backend: Rust + Tauri 2.0
+- Type Safety: tauri-specta
+- Styling: Tailwind CSS 4
 
-## 🎯 Project Philosophy
+## 프로젝트 철학
 
-VibeTinker is designed to grow with you. Rather than being a monolithic toolset, it's a **framework for building your own tools**. Use LLMs to quickly scaffold new utilities, customize existing ones, and create a workbench that matches your workflow.
+VibeTinker는 정해진 도구 모음이 아닌, 도구를 만드는 프레임워크입니다. LLM을 활용해 필요한 유틸리티를 빠르게 구축하고, 자신의 워크플로우에 맞는 워크벤치를 만들어보세요.
 
-## 🧩 Adding New Tools
+## 새 도구 추가
 
-Tools are organized in categories. To add a new tool:
+1. `src/lib/config/tools.ts`에 도구 정의
+2. `src/routes/tools/{category}/{tool-id}/+page.svelte` 생성
+3. (선택) `src-tauri/src/tools/`에 백엔드 커맨드 추가
 
-1. Define it in `src/lib/config/tools.ts`
-2. Create route: `src/routes/tools/{category}/{tool-id}/+page.svelte`
-3. (Optional) Add backend commands in `src-tauri/src/tools/`
+자세한 개발 가이드는 [CLAUDE.md](./Claude.md)를 참고하세요.
 
-See [CLAUDE.md](./Claude.md) for detailed development guidelines.
-
-## 🏗️ Architecture
+## 프로젝트 구조
 
 ```
 VibeTinker/
 ├── src/                    # Frontend (SvelteKit)
-│   ├── routes/tools/      # Tool implementations
-│   ├── lib/components/    # Reusable UI components
-│   └── lib/config/        # Tool metadata & routing
+│   ├── routes/tools/      # 도구 구현
+│   ├── lib/components/    # UI 컴포넌트
+│   └── lib/config/        # 도구 메타데이터
 ├── src-tauri/             # Backend (Rust)
-│   ├── src/tools/         # Backend command implementations
-│   └── src/modules/       # Shared utilities
-└── .github/workflows/     # CI/CD for multi-platform builds
+│   ├── src/tools/         # 백엔드 커맨드
+│   └── src/modules/       # 유틸리티
+└── .github/workflows/     # CI/CD
 ```
 
-## 📝 Development Workflow
+## 릴리스
 
-1. **Pre-commit Hooks** - Husky runs format/lint checks automatically
-2. **Type Safety** - Automatic TypeScript bindings from Rust commands
-3. **Hot Reload** - Instant feedback during development
-
-## 🚢 Release Process
-
-VibeTinker uses GitHub Actions for automated multi-platform builds:
+버전 태그 푸시 시 GitHub Actions가 자동으로 빌드합니다:
 
 ```bash
-# Create and push a version tag
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-This triggers builds for:
-- **Windows** - `.exe` installer
-- **macOS** - Universal `.dmg` + `.app` (Intel + Apple Silicon)
-- **Linux** - `.AppImage` + `.deb`
+빌드 결과물:
+- Windows: `.exe` 설치 파일
+- macOS: Universal `.dmg` + `.app` (Intel + Apple Silicon)
+- Linux: `.AppImage` + `.deb`
 
-## 🤝 Contributing
+## 기여
 
-Contributions are welcome! This project thrives on community-added tools and improvements.
+새로운 도구와 개선 사항에 대한 기여를 환영합니다.
 
-1. Fork the repository
-2. Create your feature branch
-3. Add your tool following the project structure
-4. Submit a pull request
+1. 저장소 포크
+2. 기능 브랜치 생성
+3. 프로젝트 구조에 맞춰 도구 추가
+4. Pull Request 제출
 
-## 📄 License
+## 라이선스
 
 MIT
 
-## 🙏 Acknowledgments
+## 감사
 
-- Built with [Tauri](https://tauri.app)
-- UI components from [Skeleton](https://skeleton.dev)
-- Inspired by the desire to make developer tools more accessible and customizable
+- [Tauri](https://tauri.app)
+- [Skeleton UI](https://skeleton.dev)
