@@ -148,10 +148,34 @@ fn my_cmd(state: State<'_, Mutex<AppState>>) -> Result<(), AppError> {
 
 ## Before Committing
 
+Husky pre-commit hook automatically runs:
+- Git user.name/email verification (shlifedev/shlifedev@gmail.com)
+- `cargo fmt --check` and `cargo clippy`
+- `bun run check` for TypeScript validation
+
+Manual checks (if needed):
 ```bash
 cd src-tauri && cargo fmt && cargo clippy
 bun run check
 ```
+
+## Release Process
+
+Releases are automated via GitHub Actions when you push a tag:
+
+```bash
+# Create and push a version tag
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This triggers `.github/workflows/release.yml` which:
+1. Builds for Windows (exe), macOS (dmg/app - Universal binary), Linux (AppImage/deb)
+2. Uses Rust cache for faster builds
+3. Creates a draft release with all platform binaries
+4. Review and publish the draft release on GitHub
+
+**Note:** macOS builds are signed if `TAURI_SIGNING_PRIVATE_KEY` secret is configured.
 
 ## Common Tasks
 
