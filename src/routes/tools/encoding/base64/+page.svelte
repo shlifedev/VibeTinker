@@ -41,212 +41,64 @@
   }
 </script>
 
-<div class="tool-page">
-  <header class="tool-header">
-    <h1>Base64</h1>
-    <p>문자열을 Base64로 인코딩/디코딩합니다.</p>
+<div class="p-8 max-w-[1200px] mx-auto">
+  <header class="mb-6">
+    <h1 class="text-2xl font-bold mb-2">Base64</h1>
+    <p class="opacity-50">문자열을 Base64로 인코딩/디코딩합니다.</p>
   </header>
 
-  <div class="tool-controls">
-    <div class="mode-toggle">
-      <button class:active={mode === "encode"} onclick={() => mode = "encode"}>
+  <div class="flex justify-between items-center mb-4">
+    <div class="flex gap-2">
+      <button
+        class="btn {mode === 'encode' ? 'preset-filled-primary-500' : 'preset-tonal'}"
+        onclick={() => mode = "encode"}
+      >
         Encode
       </button>
-      <button class:active={mode === "decode"} onclick={() => mode = "decode"}>
+      <button
+        class="btn {mode === 'decode' ? 'preset-filled-primary-500' : 'preset-tonal'}"
+        onclick={() => mode = "decode"}
+      >
         Decode
       </button>
     </div>
-    <div class="actions">
-      <button onclick={handleSwap}>↕ Swap</button>
-      <button onclick={handleClear}>Clear</button>
+    <div class="flex gap-2">
+      <button class="btn preset-tonal" onclick={handleSwap}>↕ Swap</button>
+      <button class="btn preset-tonal" onclick={handleClear}>Clear</button>
     </div>
   </div>
 
-  <div class="tool-content">
-    <div class="panel">
-      <label>Input</label>
+  <div class="grid grid-cols-[1fr_auto_1fr] gap-4 items-stretch">
+    <div class="flex flex-col gap-2">
+      <label class="text-sm opacity-50">Input</label>
       <textarea
         bind:value={input}
         placeholder={mode === "encode" ? "인코딩할 텍스트를 입력하세요..." : "디코딩할 Base64를 입력하세요..."}
+        class="textarea min-h-[300px] resize-y font-mono text-sm"
       ></textarea>
     </div>
 
-    <div class="convert-button">
-      <button onclick={handleConvert}>
+    <div class="flex items-center">
+      <button class="btn preset-filled-primary-500 font-semibold" onclick={handleConvert}>
         {mode === "encode" ? "Encode →" : "Decode →"}
       </button>
     </div>
 
-    <div class="panel">
-      <div class="output-header">
-        <label>Output</label>
-        <button class="copy-btn" onclick={handleCopy} disabled={!output}>Copy</button>
+    <div class="flex flex-col gap-2">
+      <div class="flex justify-between items-center">
+        <label class="text-sm opacity-50">Output</label>
+        <button class="btn btn-sm preset-tonal" onclick={handleCopy} disabled={!output}>Copy</button>
       </div>
       <textarea
         readonly
         value={output}
         placeholder="결과가 여기에 표시됩니다..."
+        class="textarea min-h-[300px] resize-y font-mono text-sm"
       ></textarea>
     </div>
   </div>
 
   {#if error}
-    <div class="error">{error}</div>
+    <div class="card preset-filled-error-500 p-4 mt-4">{error}</div>
   {/if}
 </div>
-
-<style>
-  .tool-page {
-    padding: 2rem;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .tool-header {
-    margin-bottom: 1.5rem;
-  }
-
-  .tool-header h1 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.5rem;
-  }
-
-  .tool-header p {
-    margin: 0;
-    color: #888;
-  }
-
-  .tool-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-
-  .mode-toggle {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .mode-toggle button {
-    padding: 0.5rem 1rem;
-    background: #333;
-    border: 1px solid #444;
-    color: #ccc;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-
-  .mode-toggle button.active {
-    background: #0e639c;
-    border-color: #0e639c;
-    color: #fff;
-  }
-
-  .actions {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .actions button {
-    padding: 0.5rem 1rem;
-    background: #333;
-    border: 1px solid #444;
-    color: #ccc;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-
-  .actions button:hover {
-    background: #444;
-  }
-
-  .tool-content {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 1rem;
-    align-items: stretch;
-  }
-
-  .panel {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .panel label {
-    font-size: 0.9rem;
-    color: #888;
-  }
-
-  .panel textarea {
-    flex: 1;
-    min-height: 300px;
-    padding: 1rem;
-    background: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 4px;
-    color: #e0e0e0;
-    font-family: monospace;
-    font-size: 0.9rem;
-    resize: vertical;
-  }
-
-  .panel textarea:focus {
-    outline: none;
-    border-color: #0e639c;
-  }
-
-  .output-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .copy-btn {
-    padding: 0.25rem 0.5rem;
-    background: #333;
-    border: 1px solid #444;
-    color: #ccc;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 0.8rem;
-  }
-
-  .copy-btn:hover:not(:disabled) {
-    background: #444;
-  }
-
-  .copy-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .convert-button {
-    display: flex;
-    align-items: center;
-  }
-
-  .convert-button button {
-    padding: 1rem;
-    background: #0e639c;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    border-radius: 4px;
-    font-weight: 600;
-  }
-
-  .convert-button button:hover {
-    background: #1177bb;
-  }
-
-  .error {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: #5a1d1d;
-    border: 1px solid #8b2d2d;
-    border-radius: 4px;
-    color: #f88;
-  }
-</style>

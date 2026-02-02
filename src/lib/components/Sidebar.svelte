@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from "$app/stores"
-  import { toolCategories, type ToolCategory, type Tool } from "$lib/config/tools"
+  import { toolCategories, type ToolCategory } from "$lib/config/tools"
+  import { Navigation } from "@skeletonlabs/skeleton-svelte"
 
   let expandedCategories = $state<Set<string>>(new Set(toolCategories.map((c: ToolCategory) => c.id)))
 
@@ -12,129 +13,37 @@
     }
     expandedCategories = new Set(expandedCategories)
   }
-
-  function isActive(path: string): boolean {
-    return $page.url.pathname === path
-  }
 </script>
 
-<nav class="sidebar">
-  <div class="sidebar-header">
-    <h1>Dev Tools</h1>
-  </div>
-  <ul class="tree">
+<Navigation layout="sidebar" class="h-screen border-r border-surface-200-800">
+  <Navigation.Header>
+    <a href="/" class="btn text-lg font-bold w-full justify-start px-4">Dev Tools</a>
+  </Navigation.Header>
+  <Navigation.Content>
     {#each toolCategories as category}
-      <li class="category">
-        <button
-          class="category-toggle"
-          onclick={() => toggleCategory(category.id)}
-        >
-          <span class="arrow" class:expanded={expandedCategories.has(category.id)}>▶</span>
-          {category.name}
-        </button>
+      <Navigation.Group>
+        <Navigation.Label>
+          <button
+            class="btn w-full justify-start text-sm opacity-70 hover:opacity-100"
+            onclick={() => toggleCategory(category.id)}
+          >
+            <span class="text-xs transition-transform" class:rotate-90={expandedCategories.has(category.id)}>▶</span>
+            {category.name}
+          </button>
+        </Navigation.Label>
         {#if expandedCategories.has(category.id)}
-          <ul class="tools">
+          <Navigation.Menu>
             {#each category.tools as tool}
-              <li>
-                <a
-                  href={tool.path}
-                  class:active={isActive(tool.path)}
-                >
-                  {tool.name}
-                </a>
-              </li>
+              <Navigation.TriggerAnchor
+                href={tool.path}
+                class={$page.url.pathname === tool.path ? "preset-filled-primary-500" : ""}
+              >
+                <Navigation.TriggerText>{tool.name}</Navigation.TriggerText>
+              </Navigation.TriggerAnchor>
             {/each}
-          </ul>
+          </Navigation.Menu>
         {/if}
-      </li>
+      </Navigation.Group>
     {/each}
-  </ul>
-</nav>
-
-<style>
-  .sidebar {
-    width: 220px;
-    height: 100vh;
-    position: sticky;
-    top: 0;
-    background: #1e1e1e;
-    color: #e0e0e0;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid #333;
-  }
-
-  .sidebar-header {
-    padding: 1rem;
-    border-bottom: 1px solid #333;
-  }
-
-  .sidebar-header h1 {
-    margin: 0;
-    font-size: 1.2rem;
-    font-weight: 600;
-  }
-
-  .tree {
-    list-style: none;
-    padding: 0.5rem 0;
-    margin: 0;
-    overflow-y: auto;
-    flex: 1;
-  }
-
-  .category {
-    margin: 0;
-  }
-
-  .category-toggle {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-    padding: 0.5rem 1rem;
-    background: none;
-    border: none;
-    color: #e0e0e0;
-    font-size: 0.9rem;
-    cursor: pointer;
-    text-align: left;
-  }
-
-  .category-toggle:hover {
-    background: #2a2a2a;
-  }
-
-  .arrow {
-    font-size: 0.7rem;
-    transition: transform 0.2s;
-  }
-
-  .arrow.expanded {
-    transform: rotate(90deg);
-  }
-
-  .tools {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  .tools li a {
-    display: block;
-    padding: 0.4rem 1rem 0.4rem 2.2rem;
-    color: #b0b0b0;
-    text-decoration: none;
-    font-size: 0.85rem;
-  }
-
-  .tools li a:hover {
-    background: #2a2a2a;
-    color: #e0e0e0;
-  }
-
-  .tools li a.active {
-    background: #0e639c;
-    color: #fff;
-  }
-</style>
+  </Navigation.Content>
+</Navigation>

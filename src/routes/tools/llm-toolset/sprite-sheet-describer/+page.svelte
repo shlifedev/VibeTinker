@@ -40,7 +40,6 @@
     return value
   }
 
-  // Auto-redraw when tile dimensions change
   $effect(() => {
     if ((tileWidth || tileHeight) && canvas) {
       drawGrid()
@@ -61,15 +60,10 @@
   }
 
   const PRESET_TAGS = [
-    // 지형
     "벽(위)", "벽(아래)", "벽(좌)", "벽(우)", "바닥", "천장",
-    // 구조물
     "문", "창문", "계단", "사다리",
-    // 자연
     "풀", "나무", "물", "돌",
-    // 상호작용
     "상자", "스위치", "레버",
-    // 캐릭터
     "idle", "walk", "run", "jump", "attack"
   ]
 
@@ -90,7 +84,6 @@
     localStorage.setItem(CUSTOM_TAGS_KEY, JSON.stringify(customTags))
   }
 
-  // Load on mount
   $effect(() => {
     loadCustomTags()
   })
@@ -134,16 +127,9 @@
       const { row, col } = parseKey(key)
 
       if (outputFormat === "index") {
-        return {
-          index: cellToIndex(row, col),
-          description
-        }
+        return { index: cellToIndex(row, col), description }
       } else {
-        return {
-          row,
-          col,
-          description
-        }
+        return { row, col, description }
       }
     })
 
@@ -204,7 +190,6 @@
       descriptions[key] = value
     })
 
-    // Convert image to data URL
     const canvas = document.createElement("canvas")
     canvas.width = spriteImage.width
     canvas.height = spriteImage.height
@@ -244,7 +229,6 @@
       try {
         const projectData: ProjectData = JSON.parse(evt.target?.result as string)
 
-        // Load image
         const img = new Image()
         img.onload = () => {
           spriteImage = img
@@ -252,14 +236,12 @@
           tileWidth = projectData.gridSize.tileWidth || 32
           tileHeight = projectData.gridSize.tileHeight || 32
 
-          // Load descriptions
           cellDescriptions.clear()
           Object.entries(projectData.descriptions).forEach(([key, value]) => {
             cellDescriptions.set(key, value)
           })
           cellDescriptions = new Map(cellDescriptions)
 
-          // Load custom tags
           customTags = projectData.customTags || []
           saveCustomTags()
 
@@ -348,7 +330,6 @@
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    // Preserve aspect ratio
     const aspectRatio = spriteImage.width / spriteImage.height
     const maxWidth = 600
     const maxHeight = 450
@@ -364,16 +345,12 @@
     canvas.width = canvasWidth
     canvas.height = canvasHeight
 
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-    // Draw sprite sheet image (now properly sized)
     ctx.drawImage(spriteImage, 0, 0, canvas.width, canvas.height)
 
     const cellWidth = canvas.width / gridCols
     const cellHeight = canvas.height / gridRows
 
-    // Draw grid lines
     ctx.strokeStyle = "#ffffff40"
     ctx.lineWidth = 1
 
@@ -391,16 +368,13 @@
       ctx.stroke()
     }
 
-    // Highlight cells with descriptions
     cellDescriptions.forEach((desc, key) => {
       const { row, col } = parseKey(key)
 
-      // Green border instead of blue overlay
       ctx.strokeStyle = "#4CAF50"
       ctx.lineWidth = 2
       ctx.strokeRect(col * cellWidth + 1, row * cellHeight + 1, cellWidth - 2, cellHeight - 2)
 
-      // Text with dark background pill
       const fontSize = Math.min(12, cellHeight * 0.25)
       ctx.font = `${fontSize}px sans-serif`
       ctx.textAlign = "center"
@@ -412,7 +386,6 @@
       const cx = col * cellWidth + cellWidth / 2
       const cy = row * cellHeight + cellHeight / 2
 
-      // Dark background behind text
       const padX = 4
       const padY = 2
       ctx.fillStyle = "rgba(0, 0, 0, 0.7)"
@@ -420,14 +393,12 @@
       ctx.roundRect(cx - textWidth / 2 - padX, cy - fontSize / 2 - padY, textWidth + padX * 2, fontSize + padY * 2, 3)
       ctx.fill()
 
-      // White text
       ctx.fillStyle = "#fff"
       ctx.fillText(displayText, cx, cy)
       ctx.textAlign = "start"
       ctx.textBaseline = "alphabetic"
     })
 
-    // Highlight selected cells (multi mode)
     selectedCells.forEach(key => {
       const { row, col } = parseKey(key)
       ctx.strokeStyle = "#0e639c"
@@ -483,12 +454,9 @@
       currentCell = { row, col }
       showModal = true
     } else {
-      // Multi mode
       if (e.shiftKey && lastSelectedCell) {
-        // Rectangle selection
         selectRectangle(lastSelectedCell, { row, col })
       } else if (e.ctrlKey || e.metaKey) {
-        // Toggle selection
         if (selectedCells.has(key)) {
           selectedCells.delete(key)
         } else {
@@ -496,7 +464,6 @@
         }
         selectedCells = new Set(selectedCells)
       } else {
-        // Single click in multi mode - clear and select one
         selectedCells.clear()
         selectedCells.add(key)
         selectedCells = new Set(selectedCells)
@@ -553,36 +520,36 @@
   })
 </script>
 
-<div class="tool-page">
-  <header class="tool-header">
-    <h1>Sprite Sheet Describer</h1>
-    <p>스프라이트 시트를 그리드로 나누고 각 셀에 설명을 추가합니다.</p>
+<div class="p-8 max-w-[1400px] mx-auto">
+  <header class="mb-6">
+    <h1 class="text-2xl font-bold mb-2">Sprite Sheet Describer</h1>
+    <p class="opacity-50">스프라이트 시트를 그리드로 나누고 각 셀에 설명을 추가합니다.</p>
   </header>
 
   {#if errorMessage}
-    <div class="error-toast">
+    <div class="card preset-filled-error-500 p-4 fixed top-8 right-8 z-[2000] shadow-xl animate-pulse">
       ⚠️ {errorMessage}
     </div>
   {/if}
 
-  <div class="control-panel">
-    <div class="control-section">
-      <h3>이미지 불러오기</h3>
+  <div class="flex gap-8 mb-8 flex-wrap">
+    <div class="card preset-filled-surface-200-800 p-4">
+      <h3 class="text-sm font-semibold text-primary-500 mb-3">이미지 불러오기</h3>
       <input
         type="file"
         accept="image/*"
         onchange={handleFileSelect}
-        class="file-input"
+        class="text-sm"
       />
       {#if imageFile}
-        <span class="file-name">{imageFile.name}</span>
+        <span class="block mt-2 text-xs opacity-50">{imageFile.name}</span>
       {/if}
     </div>
 
-    <div class="control-section">
-      <h3>타일 크기 (px)</h3>
-      <div class="grid-inputs">
-        <label>
+    <div class="card preset-filled-surface-200-800 p-4">
+      <h3 class="text-sm font-semibold text-primary-500 mb-3">타일 크기 (px)</h3>
+      <div class="flex gap-4">
+        <label class="flex items-center gap-2 text-sm">
           가로:
           <input
             type="number"
@@ -591,9 +558,10 @@
             onchange={() => {
               tileWidth = validateTileSize(tileWidth, "타일 가로")
             }}
+            class="input w-16 text-sm"
           />
         </label>
-        <label>
+        <label class="flex items-center gap-2 text-sm">
           세로:
           <input
             type="number"
@@ -602,39 +570,40 @@
             onchange={() => {
               tileHeight = validateTileSize(tileHeight, "타일 세로")
             }}
+            class="input w-16 text-sm"
           />
         </label>
       </div>
       {#if spriteImage}
-        <span class="grid-info">{gridCols}×{gridRows} 그리드 ({spriteImage.width}×{spriteImage.height}px)</span>
+        <span class="block mt-2 text-xs opacity-50">{gridCols}×{gridRows} 그리드 ({spriteImage.width}×{spriteImage.height}px)</span>
       {/if}
     </div>
 
-    <div class="control-section">
-      <h3>선택 모드</h3>
-      <div class="mode-toggle">
+    <div class="card preset-filled-surface-200-800 p-4">
+      <h3 class="text-sm font-semibold text-primary-500 mb-3">선택 모드</h3>
+      <div class="flex gap-2">
         <button
-          class:active={selectionMode === "single"}
+          class="btn btn-sm {selectionMode === 'single' ? 'preset-filled-primary-500' : 'preset-tonal'}"
           onclick={() => { selectionMode = "single"; selectedCells = new Set() }}
         >
           단일 선택
         </button>
         <button
-          class:active={selectionMode === "multi"}
+          class="btn btn-sm {selectionMode === 'multi' ? 'preset-filled-primary-500' : 'preset-tonal'}"
           onclick={() => selectionMode = "multi"}
         >
           멀티 선택
         </button>
       </div>
       {#if selectionMode === "multi"}
-        <div class="multi-info">
+        <div class="mt-3 flex items-center gap-3 flex-wrap">
           {#if selectedCells.size > 0}
-            <span class="selection-count">{selectedCells.size}개 셀 선택됨</span>
-            <button class="clear-btn" onclick={() => { selectedCells = new Set(); drawGrid() }}>
+            <span class="text-xs text-success-500">{selectedCells.size}개 셀 선택됨</span>
+            <button class="btn btn-sm preset-filled-error-500" onclick={() => { selectedCells = new Set(); drawGrid() }}>
               선택 해제
             </button>
           {:else}
-            <span class="hint">클릭: 단일 선택 | Ctrl+클릭: 추가/제거 | Shift+클릭: 영역 선택</span>
+            <span class="text-xs opacity-40">클릭: 단일 선택 | Ctrl+클릭: 추가/제거 | Shift+클릭: 영역 선택</span>
           {/if}
         </div>
       {/if}
@@ -642,18 +611,18 @@
   </div>
 
   {#if spriteImage}
-    <div class="tags-toolbar">
-      <div class="toolbar-header">
-        <h3>프리셋 태그</h3>
-        <button class="add-tag-btn" onclick={() => showAddTagModal = true}>
+    <div class="card preset-filled-surface-200-800 p-6 mb-8">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-sm font-semibold text-primary-500">프리셋 태그</h3>
+        <button class="btn btn-sm preset-filled-success-500" onclick={() => showAddTagModal = true}>
           + 커스텀 태그 추가
         </button>
       </div>
 
-      <div class="tags-toolbar-content">
+      <div class="flex flex-wrap gap-2">
         {#each PRESET_TAGS as tag}
           <button
-            class="tag-btn preset-tag"
+            class="btn btn-sm preset-filled-primary-500"
             onclick={() => applyTag(tag)}
             disabled={selectionMode === "single" || selectedCells.size === 0}
           >
@@ -663,17 +632,17 @@
       </div>
 
       {#if customTags.length > 0}
-        <div class="custom-tags-section">
-          <h4>커스텀 태그</h4>
-          <div class="tags-toolbar-content">
+        <div class="mt-4 pt-4 border-t border-surface-500">
+          <h4 class="text-sm font-semibold text-success-500 mb-3">커스텀 태그</h4>
+          <div class="flex flex-wrap gap-2">
             {#each customTags as tag}
               <button
-                class="tag-btn custom-tag"
+                class="btn btn-sm preset-filled-success-500 flex items-center gap-2"
                 onclick={() => applyTag(tag)}
                 disabled={selectionMode === "single" || selectedCells.size === 0}
               >
                 {tag}
-                <span class="remove-tag" onclick={(e) => { e.stopPropagation(); removeCustomTag(tag) }}>×</span>
+                <span class="opacity-70 hover:opacity-100 text-lg leading-none" onclick={(e) => { e.stopPropagation(); removeCustomTag(tag) }}>×</span>
               </button>
             {/each}
           </div>
@@ -681,53 +650,55 @@
       {/if}
 
       {#if selectionMode === "multi" && selectedCells.size === 0}
-        <p class="toolbar-hint">멀티 선택 모드에서 셀을 선택한 후 태그를 클릭하세요</p>
+        <p class="mt-4 text-xs opacity-40">멀티 선택 모드에서 셀을 선택한 후 태그를 클릭하세요</p>
       {/if}
     </div>
 
-    <div class="canvas-container">
+    <div class="mb-8">
       <canvas
         bind:this={canvas}
         width="600"
         height="450"
-        class:multi-mode={selectionMode === "multi"}
+        class="w-full max-w-[600px] h-auto bg-[#1a1a1a] border-2 border-surface-500 rounded-lg
+          {selectionMode === 'multi' ? 'cursor-crosshair' : 'cursor-pointer'}"
         onclick={handleCanvasClick}
       >
       </canvas>
     </div>
   {:else}
-    <div class="empty-state">
-      <p>이미지를 불러와서 시작하세요</p>
+    <div class="card preset-outlined-surface-200-800 p-16 text-center mb-8">
+      <p class="opacity-40 text-lg">이미지를 불러와서 시작하세요</p>
     </div>
   {/if}
 
   {#if showModal && currentCell}
-    <div class="modal-backdrop" onclick={closeModal}>
-      <div class="modal" onclick={(e) => e.stopPropagation()}>
-        <div class="modal-header">
-          <h3>
-            셀 설명 편집
-            <span class="cell-info">
+    <div class="fixed inset-0 bg-black/70 flex items-center justify-center z-[1000]" onclick={closeModal}>
+      <div class="card preset-filled-surface-200-800 w-[90%] max-w-[500px] shadow-2xl" onclick={(e) => e.stopPropagation()}>
+        <div class="flex justify-between items-start p-6 border-b border-surface-500">
+          <div>
+            <h3 class="text-base font-semibold text-primary-500">셀 설명 편집</h3>
+            <span class="text-xs opacity-50 mt-1 block">
               (행: {currentCell.row}, 열: {currentCell.col},
               인덱스: {cellToIndex(currentCell.row, currentCell.col)})
             </span>
-          </h3>
-          <button class="close-btn" onclick={closeModal}>×</button>
+          </div>
+          <button class="btn-icon preset-tonal" onclick={closeModal}>×</button>
         </div>
 
-        <div class="modal-body">
+        <div class="p-6">
           <textarea
             bind:value={modalDescription}
             placeholder="셀 설명을 입력하세요..."
             rows="4"
+            class="textarea w-full text-sm"
           ></textarea>
 
-          <div class="quick-tags">
-            <span class="tags-label">빠른 선택:</span>
-            <div class="tags-grid">
+          <div class="mt-4 pt-4 border-t border-surface-500">
+            <span class="text-xs opacity-50 block mb-2">빠른 선택:</span>
+            <div class="flex flex-wrap gap-2">
               {#each PRESET_TAGS as tag}
                 <button
-                  class="tag-btn preset-tag"
+                  class="btn btn-sm preset-filled-primary-500"
                   onclick={() => { modalDescription = tag }}
                 >
                   {tag}
@@ -735,7 +706,7 @@
               {/each}
               {#each customTags as tag}
                 <button
-                  class="tag-btn custom-tag"
+                  class="btn btn-sm preset-filled-success-500"
                   onclick={() => { modalDescription = tag }}
                 >
                   {tag}
@@ -745,760 +716,112 @@
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button class="btn-secondary" onclick={closeModal}>취소</button>
-          <button class="btn-danger" onclick={deleteDescription}>삭제</button>
-          <button class="btn-primary" onclick={saveDescription}>저장</button>
+        <div class="flex justify-end gap-2 p-6 border-t border-surface-500">
+          <button class="btn preset-tonal" onclick={closeModal}>취소</button>
+          <button class="btn preset-filled-error-500" onclick={deleteDescription}>삭제</button>
+          <button class="btn preset-filled-primary-500" onclick={saveDescription}>저장</button>
         </div>
       </div>
     </div>
   {/if}
 
   {#if cellDescriptions.size > 0}
-    <div class="output-section">
-      <div class="output-header">
-        <h3>출력</h3>
-        <div class="format-toggle">
-          <label>
+    <div class="mt-8">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-primary-500">출력</h3>
+        <div class="flex gap-4">
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="radio"
               value="rowcol"
               bind:group={outputFormat}
+              class="accent-primary-500"
             />
             Row/Col
           </label>
-          <label>
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="radio"
               value="index"
               bind:group={outputFormat}
+              class="accent-primary-500"
             />
             Index
           </label>
         </div>
       </div>
 
-      <div class="output-panels">
-        <div class="output-panel">
-          <div class="panel-header">
-            <h4>JSON</h4>
-            <button onclick={() => copyToClipboard(jsonOutput, "JSON")}>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="card preset-filled-surface-200-800 overflow-hidden">
+          <div class="flex justify-between items-center p-4 border-b border-surface-500">
+            <h4 class="text-sm font-semibold text-primary-500">JSON</h4>
+            <button class="btn btn-sm preset-filled-primary-500" onclick={() => copyToClipboard(jsonOutput, "JSON")}>
               {copyFeedback === "JSON" ? "복사됨!" : "Copy"}
             </button>
           </div>
-          <pre>{jsonOutput}</pre>
+          <pre class="p-4 bg-surface-900 text-xs font-mono whitespace-pre-wrap break-words overflow-auto max-h-[400px]">{jsonOutput}</pre>
         </div>
 
-        <div class="output-panel">
-          <div class="panel-header">
-            <h4>텍스트 리스트</h4>
-            <button onclick={() => copyToClipboard(textOutput, "텍스트")}>
+        <div class="card preset-filled-surface-200-800 overflow-hidden">
+          <div class="flex justify-between items-center p-4 border-b border-surface-500">
+            <h4 class="text-sm font-semibold text-primary-500">텍스트 리스트</h4>
+            <button class="btn btn-sm preset-filled-primary-500" onclick={() => copyToClipboard(textOutput, "텍스트")}>
               {copyFeedback === "텍스트" ? "복사됨!" : "Copy"}
             </button>
           </div>
-          <pre>{textOutput}</pre>
+          <pre class="p-4 bg-surface-900 text-xs font-mono whitespace-pre-wrap break-words overflow-auto max-h-[400px]">{textOutput}</pre>
         </div>
       </div>
     </div>
   {/if}
 
-  <div class="project-management">
-    <h3>프로젝트 관리</h3>
-    <div class="management-actions">
-      <button class="mgmt-btn save" onclick={saveProject} disabled={!spriteImage}>
+  <div class="mt-8 pt-8 border-t-2 border-surface-500">
+    <h3 class="text-base opacity-50 mb-4">프로젝트 관리</h3>
+    <div class="flex gap-4 flex-wrap">
+      <button class="btn preset-filled-primary-500" onclick={saveProject} disabled={!spriteImage}>
         💾 프로젝트 저장
       </button>
-      <label class="mgmt-btn load">
+      <label class="btn preset-filled-success-500 cursor-pointer">
         📂 프로젝트 불러오기
         <input
           type="file"
           accept="application/json"
           onchange={handleProjectLoad}
-          style="display: none;"
+          class="hidden"
         />
       </label>
-      <button class="mgmt-btn clear" onclick={clearDescriptions} disabled={cellDescriptions.size === 0}>
+      <button class="btn preset-filled-warning-500" onclick={clearDescriptions} disabled={cellDescriptions.size === 0}>
         🗑️ 설명만 지우기
       </button>
-      <button class="mgmt-btn reset" onclick={resetAll} disabled={!spriteImage}>
+      <button class="btn preset-filled-error-500" onclick={resetAll} disabled={!spriteImage}>
         ♻️ 전체 초기화
       </button>
     </div>
   </div>
 
   {#if showAddTagModal}
-    <div class="modal-backdrop" onclick={() => showAddTagModal = false}>
-      <div class="modal small-modal" onclick={(e) => e.stopPropagation()}>
-        <div class="modal-header">
-          <h3>커스텀 태그 추가</h3>
-          <button class="close-btn" onclick={() => showAddTagModal = false}>×</button>
+    <div class="fixed inset-0 bg-black/70 flex items-center justify-center z-[1000]" onclick={() => showAddTagModal = false}>
+      <div class="card preset-filled-surface-200-800 w-[90%] max-w-[400px] shadow-2xl" onclick={(e) => e.stopPropagation()}>
+        <div class="flex justify-between items-center p-6 border-b border-surface-500">
+          <h3 class="text-base font-semibold text-primary-500">커스텀 태그 추가</h3>
+          <button class="btn-icon preset-tonal" onclick={() => showAddTagModal = false}>×</button>
         </div>
 
-        <div class="modal-body">
+        <div class="p-6">
           <input
             type="text"
             bind:value={newTagName}
             placeholder="태그 이름을 입력하세요..."
             onkeydown={(e) => e.key === "Enter" && addCustomTag()}
+            class="input w-full text-sm"
           />
         </div>
 
-        <div class="modal-footer">
-          <button class="btn-secondary" onclick={() => showAddTagModal = false}>취소</button>
-          <button class="btn-primary" onclick={addCustomTag}>추가</button>
+        <div class="flex justify-end gap-2 p-6 border-t border-surface-500">
+          <button class="btn preset-tonal" onclick={() => showAddTagModal = false}>취소</button>
+          <button class="btn preset-filled-primary-500" onclick={addCustomTag}>추가</button>
         </div>
       </div>
     </div>
   {/if}
 </div>
-
-<style>
-  .tool-page {
-    padding: 2rem;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-
-  .tool-header {
-    margin-bottom: 1.5rem;
-  }
-
-  .tool-header h1 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.5rem;
-  }
-
-  .tool-header p {
-    margin: 0;
-    color: #888;
-  }
-
-  .instructions {
-    background: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-  }
-
-  .instructions h3 {
-    margin-top: 0;
-    font-size: 1rem;
-    color: #0e639c;
-  }
-
-  .instructions ol {
-    margin: 0.5rem 0 0 1.5rem;
-    padding: 0;
-  }
-
-  .instructions li {
-    margin: 0.5rem 0;
-    color: #ccc;
-  }
-
-  .control-panel {
-    display: flex;
-    gap: 2rem;
-    margin-bottom: 2rem;
-    flex-wrap: wrap;
-  }
-
-  .control-section {
-    background: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 1rem;
-  }
-
-  .control-section h3 {
-    margin: 0 0 0.75rem 0;
-    font-size: 0.9rem;
-    color: #0e639c;
-  }
-
-  .file-input {
-    display: block;
-    color: #ccc;
-    font-size: 0.9rem;
-  }
-
-  .file-name {
-    display: block;
-    margin-top: 0.5rem;
-    font-size: 0.85rem;
-    color: #888;
-  }
-
-  .grid-inputs {
-    display: flex;
-    gap: 1rem;
-  }
-
-  .grid-inputs label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    color: #ccc;
-  }
-
-  .grid-inputs input {
-    width: 60px;
-    padding: 0.4rem;
-    background: #0d0d0d;
-    border: 1px solid #444;
-    color: #e0e0e0;
-    border-radius: 4px;
-  }
-
-  .grid-info {
-    display: block;
-    margin-top: 0.5rem;
-    font-size: 0.8rem;
-    color: #888;
-  }
-
-  .mode-toggle {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .mode-toggle button {
-    padding: 0.5rem 1rem;
-    background: #333;
-    border: 1px solid #444;
-    color: #ccc;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 0.85rem;
-  }
-
-  .mode-toggle button:hover {
-    background: #444;
-  }
-
-  .mode-toggle button.active {
-    background: #0e639c;
-    border-color: #0e639c;
-    color: #fff;
-  }
-
-  .selection-count {
-    display: block;
-    margin-top: 0.5rem;
-    font-size: 0.85rem;
-    color: #4CAF50;
-  }
-
-  .multi-info {
-    margin-top: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-  }
-
-  .hint {
-    font-size: 0.8rem;
-    color: #666;
-  }
-
-  .clear-btn {
-    padding: 0.25rem 0.75rem;
-    background: #d32f2f;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 0.8rem;
-  }
-
-  .clear-btn:hover {
-    background: #f44336;
-  }
-
-  .canvas-container {
-    margin-bottom: 2rem;
-  }
-
-  canvas {
-    width: 100%;
-    max-width: 600px;
-    height: auto;
-    background: #1a1a1a;
-    border: 2px solid #333;
-    border-radius: 8px;
-    cursor: pointer;
-  }
-
-  canvas.multi-mode {
-    cursor: crosshair;
-  }
-
-  .empty-state {
-    padding: 4rem 2rem;
-    text-align: center;
-    background: #1a1a1a;
-    border: 2px dashed #333;
-    border-radius: 8px;
-    margin-bottom: 2rem;
-  }
-
-  .empty-state p {
-    margin: 0;
-    color: #666;
-    font-size: 1.1rem;
-  }
-
-  .modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
-
-  .modal {
-    background: #1e1e1e;
-    border: 1px solid #444;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 1.5rem;
-    border-bottom: 1px solid #333;
-  }
-
-  .modal-header h3 {
-    margin: 0;
-    font-size: 1rem;
-    color: #0e639c;
-  }
-
-  .cell-info {
-    display: block;
-    font-size: 0.85rem;
-    color: #888;
-    font-weight: normal;
-    margin-top: 0.25rem;
-  }
-
-  .close-btn {
-    background: none;
-    border: none;
-    color: #888;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    line-height: 1;
-  }
-
-  .close-btn:hover {
-    color: #fff;
-  }
-
-  .modal-body {
-    padding: 1.5rem;
-  }
-
-  .modal-body textarea {
-    width: 100%;
-    padding: 0.75rem;
-    background: #0d0d0d;
-    border: 1px solid #444;
-    color: #e0e0e0;
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: 0.9rem;
-    resize: vertical;
-  }
-
-  .modal-body textarea:focus {
-    outline: none;
-    border-color: #0e639c;
-  }
-
-  .modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-    padding: 1.5rem;
-    border-top: 1px solid #333;
-  }
-
-  .modal-footer button {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9rem;
-  }
-
-  .btn-primary {
-    background: #0e639c;
-    color: #fff;
-  }
-
-  .btn-primary:hover {
-    background: #1177bb;
-  }
-
-  .btn-secondary {
-    background: #333;
-    color: #ccc;
-  }
-
-  .btn-secondary:hover {
-    background: #444;
-  }
-
-  .btn-danger {
-    background: #d32f2f;
-    color: #fff;
-  }
-
-  .btn-danger:hover {
-    background: #f44336;
-  }
-
-  .quick-tags {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #333;
-  }
-
-  .tags-label {
-    display: block;
-    font-size: 0.85rem;
-    color: #888;
-    margin-bottom: 0.5rem;
-  }
-
-  .tags-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .tag-btn {
-    padding: 0.4rem 0.8rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all 0.2s;
-  }
-
-  .preset-tag {
-    background: #0e639c;
-    color: #fff;
-  }
-
-  .preset-tag:hover:not(:disabled) {
-    background: #1177bb;
-    transform: translateY(-1px);
-  }
-
-  .tag-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  .tags-toolbar {
-    background: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-  }
-
-  .tags-toolbar h3 {
-    margin: 0 0 1rem 0;
-    font-size: 1rem;
-    color: #0e639c;
-  }
-
-  .tags-toolbar-content {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .toolbar-hint {
-    margin: 1rem 0 0 0;
-    font-size: 0.85rem;
-    color: #666;
-  }
-
-  .toolbar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-
-  .add-tag-btn {
-    padding: 0.4rem 0.8rem;
-    background: #4CAF50;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 0.85rem;
-  }
-
-  .add-tag-btn:hover {
-    background: #66BB6A;
-  }
-
-  .custom-tags-section {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #333;
-  }
-
-  .custom-tags-section h4 {
-    margin: 0 0 1rem 0;
-    font-size: 0.9rem;
-    color: #4CAF50;
-  }
-
-  .custom-tag {
-    background: #4CAF50;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .custom-tag:hover:not(:disabled) {
-    background: #66BB6A;
-  }
-
-  .remove-tag {
-    font-size: 1.2rem;
-    line-height: 1;
-    opacity: 0.7;
-  }
-
-  .remove-tag:hover {
-    opacity: 1;
-  }
-
-  .small-modal {
-    max-width: 400px;
-  }
-
-  .modal-body input[type="text"] {
-    width: 100%;
-    padding: 0.75rem;
-    background: #0d0d0d;
-    border: 1px solid #444;
-    color: #e0e0e0;
-    border-radius: 4px;
-    font-size: 0.9rem;
-  }
-
-  .modal-body input[type="text"]:focus {
-    outline: none;
-    border-color: #4CAF50;
-  }
-
-  .output-section {
-    margin-top: 2rem;
-  }
-
-  .output-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
-
-  .output-header h3 {
-    margin: 0;
-    font-size: 1.2rem;
-    color: #0e639c;
-  }
-
-  .format-toggle {
-    display: flex;
-    gap: 1rem;
-  }
-
-  .format-toggle label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    color: #ccc;
-    cursor: pointer;
-  }
-
-  .format-toggle input[type="radio"] {
-    cursor: pointer;
-    accent-color: #0e639c;
-  }
-
-  .output-panels {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-
-  .output-panel {
-    background: #1e1e1e;
-    border: 1px solid #333;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    background: #252526;
-    border-bottom: 1px solid #333;
-  }
-
-  .panel-header h4 {
-    margin: 0;
-    font-size: 0.9rem;
-    color: #0e639c;
-  }
-
-  .panel-header button {
-    padding: 0.4rem 0.8rem;
-    background: #0e639c;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 0.85rem;
-  }
-
-  .panel-header button:hover {
-    background: #1177bb;
-  }
-
-  .output-panel pre {
-    margin: 0;
-    padding: 1rem;
-    background: #0d0d0d;
-    color: #e0e0e0;
-    font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
-    font-size: 0.85rem;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    overflow-x: auto;
-    max-height: 400px;
-    overflow-y: auto;
-  }
-
-  .project-management {
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 2px solid #333;
-  }
-
-  .project-management h3 {
-    margin: 0 0 1rem 0;
-    font-size: 1rem;
-    color: #888;
-  }
-
-  .management-actions {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .mgmt-btn {
-    padding: 0.75rem 1.25rem;
-    border: 1px solid #444;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: all 0.2s;
-  }
-
-  .mgmt-btn.save {
-    background: #0e639c;
-    color: #fff;
-  }
-
-  .mgmt-btn.save:hover:not(:disabled) {
-    background: #1177bb;
-  }
-
-  .mgmt-btn.load {
-    background: #4CAF50;
-    color: #fff;
-  }
-
-  .mgmt-btn.load:hover {
-    background: #66BB6A;
-  }
-
-  .mgmt-btn.clear {
-    background: #ff9800;
-    color: #fff;
-  }
-
-  .mgmt-btn.clear:hover:not(:disabled) {
-    background: #ffa726;
-  }
-
-  .mgmt-btn.reset {
-    background: #d32f2f;
-    color: #fff;
-  }
-
-  .mgmt-btn.reset:hover:not(:disabled) {
-    background: #f44336;
-  }
-
-  .mgmt-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  .error-toast {
-    position: fixed;
-    top: 2rem;
-    right: 2rem;
-    background: #d32f2f;
-    color: #fff;
-    padding: 1rem 1.5rem;
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    z-index: 2000;
-    animation: slideIn 0.3s ease-out;
-  }
-
-  @keyframes slideIn {
-    from {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-</style>

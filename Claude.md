@@ -1,6 +1,8 @@
-# Agent Guidelines for New App
+# CLAUDE.md
 
-Tauri 2.0 desktop application with SvelteKit frontend and Rust backend.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+Tauri 2.0 desktop application with SvelteKit frontend and Rust backend. A collection of developer tools with a sidebar navigation UI.
 
 ## Principles
 

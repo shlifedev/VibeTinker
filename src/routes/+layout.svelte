@@ -1,35 +1,11 @@
 <script lang="ts">
+  import "../app.css"
   import Sidebar from "$lib/components/Sidebar.svelte"
 </script>
 
-<div class="app-layout">
+<div class="grid grid-cols-[auto_1fr] h-screen">
   <Sidebar />
-  <main class="main-content">
+  <main class="overflow-y-auto">
     <slot />
   </main>
 </div>
-
-<style>
-  :global(body) {
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: #1e1e1e;
-  }
-
-  :global(*) {
-    box-sizing: border-box;
-  }
-
-  .app-layout {
-    display: flex;
-    min-height: 100vh;
-  }
-
-  .main-content {
-    flex: 1;
-    background: #252526;
-    color: #e0e0e0;
-    overflow-y: auto;
-  }
-</style>
