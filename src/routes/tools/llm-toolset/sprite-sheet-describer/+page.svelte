@@ -16,6 +16,24 @@
   let customTags = $state<string[]>([])
   let outputFormat = $state<"rowcol" | "index">("rowcol")
   let canvas = $state<HTMLCanvasElement | null>(null)
+  let errorMessage = $state<string | null>(null)
+
+  function showError(message: string) {
+    errorMessage = message
+    setTimeout(() => { errorMessage = null }, 4000)
+  }
+
+  function validateGridSize(value: number, name: string) {
+    if (value < 1) {
+      showError(`${name}은(는) 1 이상이어야 합니다.`)
+      return 1
+    }
+    if (value > 50) {
+      showError(`${name}은(는) 50 이하여야 합니다.`)
+      return 50
+    }
+    return value
+  }
 
   // Auto-redraw when grid dimensions change
   $effect(() => {
@@ -282,17 +300,37 @@
     const file = input.files?.[0]
     if (!file) return
 
+    if (!file.type.startsWith("image/")) {
+      showError("이미지 파일만 선택할 수 있습니다.")
+      return
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      showError("파일 크기는 10MB 이하여야 합니다.")
+      return
+    }
+
     imageFile = file
     const reader = new FileReader()
 
+    reader.onerror = () => {
+      showError("이미지를 불러올 수 없습니다.")
+    }
+
     reader.onload = (evt) => {
       const img = new Image()
+
+      img.onerror = () => {
+        showError("이미지를 로드할 수 없습니다.")
+      }
+
       img.onload = () => {
         spriteImage = img
         cellDescriptions = new Map()
         selectedCells = new Set()
         drawGrid()
       }
+
       img.src = evt.target?.result as string
     }
 
@@ -492,6 +530,12 @@
     <p>스프라이트 시트를 그리드로 나누고 각 셀에 설명을 추가합니다.</p>
   </header>
 
+  {#if errorMessage}
+    <div class="error-toast">
+      ⚠️ {errorMessage}
+    </div>
+  {/if}
+
   <div class="instructions">
     <h3>사용 방법</h3>
     <ol>
@@ -526,6 +570,10 @@
             min="1"
             max="50"
             bind:value={gridRows}
+            onchange={() => {
+              gridRows = validateGridSize(gridRows, "행")
+              drawGrid()
+            }}
           />
         </label>
         <label>
@@ -535,6 +583,10 @@
             min="1"
             max="50"
             bind:value={gridCols}
+            onchange={() => {
+              gridCols = validateGridSize(gridCols, "열")
+              drawGrid()
+            }}
           />
         </label>
       </div>
@@ -1399,5 +1451,29 @@
   .mgmt-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+
+  .error-toast {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: #d32f2f;
+    color: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 2000;
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
   }
 </style>
