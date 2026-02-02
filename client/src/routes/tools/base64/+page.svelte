@@ -1,11 +1,24 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { encodeBase64, decodeBase64 } from '$lib/api';
+  import { getPreference, setPreference } from '$lib/stores/preferences';
   
   let input = $state('');
   let output = $state('');
   let error = $state('');
   let mode = $state<'encode' | 'decode'>('encode');
   let loading = $state(false);
+  
+  onMount(() => {
+    const savedMode = getPreference('base64Mode');
+    if (savedMode) {
+      mode = savedMode;
+    }
+  });
+  
+  $effect(() => {
+    setPreference('base64Mode', mode);
+  });
   
   async function handleConvert() {
     if (!input.trim()) {
