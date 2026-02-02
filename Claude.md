@@ -275,6 +275,20 @@ This triggers `.github/workflows/release.yml` which:
 - 그래프 호버 시 t/value 표시
 - 컬러 코드로 구분
 
+## Multi-language README Management
+
+**CRITICAL:** When updating the main `README.md`, you MUST update all language versions in `docs/`:
+
+1. Edit `/README.md` (English base)
+2. Translate and update ALL language versions:
+   - `docs/README.ko.md` (Korean)
+   - `docs/README.zh-CN.md` (Simplified Chinese)
+   - `docs/README.ja.md` (Japanese)
+   - `docs/README.es.md` (Spanish)
+   - `docs/README.fr.md` (French)
+
+This ensures consistent documentation across all languages. Do not skip any language version.
+
 ## Keeping This File Updated
 
 When you add:

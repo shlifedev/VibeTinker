@@ -1,110 +1,112 @@
 # VibeTinker
 
-LLM 지원을 통해 확장 가능한 개발자 도구 모음
+*Read this in other languages: [한국어](docs/README.ko.md) | [简体中文](docs/README.zh-CN.md) | [日本語](docs/README.ja.md) | [Español](docs/README.es.md) | [Français](docs/README.fr.md)*
 
-## 소개
+An extensible workbench for developer tools, powered by LLM-assisted development.
 
-VibeTinker는 사이드바 인터페이스로 다양한 개발 도구를 관리할 수 있는 데스크톱 애플리케이션입니다. LLM의 도움을 받아 새로운 도구를 추가하고, 기존 도구를 커스터마이징하여 나만의 워크벤치를 만들 수 있습니다.
+## Overview
 
-## 주요 기능
+VibeTinker is a desktop application that helps you build and manage your own collection of developer utilities with an intuitive sidebar interface. Add new tools on the fly using LLM assistance, making it your personalized productivity workbench.
 
-- 사이드바 네비게이션으로 도구 구성
-- LLM 보조로 새 도구 빠르게 추가
-- Tauri + Rust 백엔드로 네이티브 성능
-- 카테고리별 도구 분류
+## Key Features
 
-## 내장 도구
+- Sidebar navigation for organized tool access
+- LLM-assisted tool creation and customization
+- Native performance with Tauri + Rust backend
+- Category-based tool organization
 
-### 인코딩
-- **Base64** - 텍스트 Base64 인코딩/디코딩
+## Built-in Tools
 
-### LLM 도구
-- **Motion Descriptor** - 마우스 제스처를 자연어로 변환
+### Encoding
+- **Base64** - Encode/decode text to Base64
 
-### 게임 개발
-- **Sprite Sheet Describer** - 스프라이트 시트에 설명 추가, JSON 출력
-- **Tween Visualizer** - 30+ 이징 함수 시각화 및 비교
+### LLM Tools
+- **Motion Descriptor** - Convert mouse gestures to natural language descriptions
 
-## 시작하기
+### Game Development
+- **Sprite Sheet Describer** - Annotate sprite sheet grids with descriptions, export as JSON
+- **Tween Visualizer** - Visualize and compare 30+ easing functions
 
-### 필수 요구사항
+## Getting Started
+
+### Prerequisites
 - [Bun](https://bun.sh)
 - [Rust](https://rustup.rs)
 
-### 개발 모드
+### Development
 
 ```bash
 bun install
 bun run tauri dev
 ```
 
-### 프로덕션 빌드
+### Production Build
 
 ```bash
 bun run tauri build
 ```
 
-## 기술 스택
+## Tech Stack
 
 - Frontend: SvelteKit 2.x + Svelte 5, Skeleton UI
 - Backend: Rust + Tauri 2.0
 - Type Safety: tauri-specta
 - Styling: Tailwind CSS 4
 
-## 프로젝트 철학
+## Project Philosophy
 
-VibeTinker는 정해진 도구 모음이 아닌, 도구를 만드는 프레임워크입니다. LLM을 활용해 필요한 유틸리티를 빠르게 구축하고, 자신의 워크플로우에 맞는 워크벤치를 만들어보세요.
+VibeTinker is not just a fixed toolset, but a framework for building your own tools. Leverage LLMs to quickly scaffold utilities and create a workbench that fits your workflow.
 
-## 새 도구 추가
+## Adding New Tools
 
-1. `src/lib/config/tools.ts`에 도구 정의
-2. `src/routes/tools/{category}/{tool-id}/+page.svelte` 생성
-3. (선택) `src-tauri/src/tools/`에 백엔드 커맨드 추가
+1. Define tool in `src/lib/config/tools.ts`
+2. Create route: `src/routes/tools/{category}/{tool-id}/+page.svelte`
+3. (Optional) Add backend commands in `src-tauri/src/tools/`
 
-자세한 개발 가이드는 [CLAUDE.md](./Claude.md)를 참고하세요.
+See [CLAUDE.md](./Claude.md) for detailed development guidelines.
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 VibeTinker/
 ├── src/                    # Frontend (SvelteKit)
-│   ├── routes/tools/      # 도구 구현
-│   ├── lib/components/    # UI 컴포넌트
-│   └── lib/config/        # 도구 메타데이터
+│   ├── routes/tools/      # Tool implementations
+│   ├── lib/components/    # UI components
+│   └── lib/config/        # Tool metadata
 ├── src-tauri/             # Backend (Rust)
-│   ├── src/tools/         # 백엔드 커맨드
-│   └── src/modules/       # 유틸리티
+│   ├── src/tools/         # Backend commands
+│   └── src/modules/       # Utilities
 └── .github/workflows/     # CI/CD
 ```
 
-## 릴리스
+## Release
 
-버전 태그 푸시 시 GitHub Actions가 자동으로 빌드합니다:
+Push a version tag to trigger automated builds via GitHub Actions:
 
 ```bash
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-빌드 결과물:
-- Windows: `.exe` 설치 파일
+Build artifacts:
+- Windows: `.exe` installer
 - macOS: Universal `.dmg` + `.app` (Intel + Apple Silicon)
 - Linux: `.AppImage` + `.deb`
 
-## 기여
+## Contributing
 
-새로운 도구와 개선 사항에 대한 기여를 환영합니다.
+Contributions are welcome! We appreciate new tools and improvements.
 
-1. 저장소 포크
-2. 기능 브랜치 생성
-3. 프로젝트 구조에 맞춰 도구 추가
-4. Pull Request 제출
+1. Fork the repository
+2. Create your feature branch
+3. Add your tool following the project structure
+4. Submit a pull request
 
-## 라이선스
+## License
 
 MIT
 
-## 감사
+## Acknowledgments
 
 - [Tauri](https://tauri.app)
 - [Skeleton UI](https://skeleton.dev)
