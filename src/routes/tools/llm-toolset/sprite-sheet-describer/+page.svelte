@@ -131,6 +131,28 @@
 
   let lastSelectedCell = $state<CellKey | null>(null)
 
+  function selectRectangle(start: CellKey | null, end: CellKey) {
+    if (!start) {
+      const key = cellKey(end.row, end.col)
+      selectedCells.add(key)
+      selectedCells = new Set(selectedCells)
+      return
+    }
+
+    const minRow = Math.min(start.row, end.row)
+    const maxRow = Math.max(start.row, end.row)
+    const minCol = Math.min(start.col, end.col)
+    const maxCol = Math.max(start.col, end.col)
+
+    for (let r = minRow; r <= maxRow; r++) {
+      for (let c = minCol; c <= maxCol; c++) {
+        selectedCells.add(cellKey(r, c))
+      }
+    }
+
+    selectedCells = new Set(selectedCells)
+  }
+
   function handleCanvasClick(e: MouseEvent) {
     if (!canvas || !spriteImage) return
 
@@ -154,13 +176,22 @@
       currentCell = { row, col }
       showModal = true
     } else {
-      // Multi mode - will implement in next task
-      if (e.ctrlKey || e.metaKey) {
+      // Multi mode
+      if (e.shiftKey && lastSelectedCell) {
+        // Rectangle selection
+        selectRectangle(lastSelectedCell, { row, col })
+      } else if (e.ctrlKey || e.metaKey) {
+        // Toggle selection
         if (selectedCells.has(key)) {
           selectedCells.delete(key)
         } else {
           selectedCells.add(key)
         }
+        selectedCells = new Set(selectedCells)
+      } else {
+        // Single click in multi mode - clear and select one
+        selectedCells.clear()
+        selectedCells.add(key)
         selectedCells = new Set(selectedCells)
       }
       lastSelectedCell = { row, col }
@@ -285,8 +316,17 @@
           멀티 선택
         </button>
       </div>
-      {#if selectionMode === "multi" && selectedCells.size > 0}
-        <span class="selection-count">{selectedCells.size}개 셀 선택됨</span>
+      {#if selectionMode === "multi"}
+        <div class="multi-info">
+          {#if selectedCells.size > 0}
+            <span class="selection-count">{selectedCells.size}개 셀 선택됨</span>
+            <button class="clear-btn" onclick={() => { selectedCells = new Set(); drawGrid() }}>
+              선택 해제
+            </button>
+          {:else}
+            <span class="hint">클릭: 단일 선택 | Ctrl+클릭: 추가/제거 | Shift+클릭: 영역 선택</span>
+          {/if}
+        </div>
       {/if}
     </div>
   </div>
@@ -470,6 +510,33 @@
     margin-top: 0.5rem;
     font-size: 0.85rem;
     color: #4CAF50;
+  }
+
+  .multi-info {
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .hint {
+    font-size: 0.8rem;
+    color: #666;
+  }
+
+  .clear-btn {
+    padding: 0.25rem 0.75rem;
+    background: #d32f2f;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 0.8rem;
+  }
+
+  .clear-btn:hover {
+    background: #f44336;
   }
 
   .canvas-container {
